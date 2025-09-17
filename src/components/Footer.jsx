@@ -49,7 +49,7 @@ const Footer = () => {
             <h6 style={{ color: "#2c3e50", marginBottom: "20px" }}>Liên hệ</h6>
             <div className="d-flex align-items-center mb-2">
               <GeoAlt size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
-              <span style={{ color: "#6c757d", fontSize: "14px" }}>123 Đường ABC, Quận 1, TP.HCM</span>
+              <span style={{ color: "#6c757d", fontSize: "14px" }}>246 Nguyễn Thị Minh Khai, Quy Nhơn Nam, Gia Lai</span>
             </div>
             <div className="d-flex align-items-center mb-2">
               <Telephone size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
@@ -57,7 +57,7 @@ const Footer = () => {
             </div>
             <div className="d-flex align-items-center mb-2">
               <Envelope size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
-              <span style={{ color: "#6c757d", fontSize: "14px" }}>info@handcrafted.com</span>
+              <span style={{ color: "#6c757d", fontSize: "14px" }}>info@hmall.com</span>
             </div>
           </Col>
         </Row>
