@@ -30,8 +30,8 @@ const NavigationBar = () => {
   return (
     <Navbar expand="lg" className="navbar-custom" fixed="top">
       <Container>
-        <LinkContainer to="/">
-          <Navbar.Brand className="navbar-brand-custom">HMall</Navbar.Brand>
+        <LinkContainer to="/" style={{ width: "80px", height: "80px" }}>
+          <img src="public/images/HMallLogo.jpg" alt="Logo" />
         </LinkContainer>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />

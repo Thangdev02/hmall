@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { Container, Row, Col, Button, Badge, Card, Form, Modal, Toast, ToastContainer } from "react-bootstrap"
 import { motion } from "framer-motion"
 import { Star, Heart } from "react-bootstrap-icons"
@@ -12,6 +12,7 @@ import "./ProductDetail.css"
 
 const ProductDetail = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState("")
@@ -98,6 +99,11 @@ const ProductDetail = () => {
         setToastMessage(`Đã thêm ${cartQuantity} sản phẩm vào giỏ hàng!`)
         setShowToast(true)
         setCartQuantity(1) // Reset quantity to 1 after adding
+
+        // Navigate to cart page after successful addition
+        setTimeout(() => {
+          navigate('/cart')
+        }, 1000) // Wait 1 second to show toast message
       } else {
         setToastMessage(res.message || "Thêm vào giỏ hàng thất bại!")
         setShowToast(true)
