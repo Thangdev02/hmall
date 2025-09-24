@@ -31,7 +31,7 @@ const NavigationBar = () => {
     <Navbar expand="lg" className="navbar-custom" fixed="top">
       <Container>
         <LinkContainer to="/" style={{ width: "80px", height: "80px" }}>
-          <img src="public/images/HMallLogo.jpg" alt="Logo" />
+          <img src="./images/HMallLogo.jpg" alt="Logo" />
         </LinkContainer>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
