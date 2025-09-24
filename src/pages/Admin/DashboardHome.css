@@ -1,0 +1,36 @@
+.dashboard {
+    background: #f9f9f9;
+  }
+  
+  .visits-card {
+    background: linear-gradient(135deg, #6190e8, #a7bfe8);
+    border: none;
+    border-radius: 12px;
+  }
+  
+  .popularity-card {
+    background: #f9c7a5;
+    border: none;
+    border-radius: 12px;
+  }
+  
+  .progress-thin {
+    height: 6px;
+  }
+  
+  .map-placeholder {
+    background: #eaf4fc;
+    border-radius: 8px;
+    text-align: center;
+    padding: 30px 0;
+    color: #555;
+  }
+  
+  /* Dashboard.css */
+.dashboard-card {
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
