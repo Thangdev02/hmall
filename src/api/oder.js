@@ -69,3 +69,33 @@ export async function getOrdersByShop({ pageNumber = 1, pageSize = 999, filter =
 
     return await res.json();
 }
+
+// Tạo QR payment cho đơn hàng
+export async function createQRPayment(data, token) {
+    const res = await fetch(`${BASE_URL}/api/v1/orders/create-qr-payment`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    });
+
+    return await res.json();
+}
+
+// Cập nhật trạng thái đơn hàng
+export async function editOrderStatus(orderID, status, token) {
+    const formData = new FormData();
+    formData.append("status", status);
+
+    const res = await fetch(`${BASE_URL}/api/v1/orders/edit-order-status/${orderID}`, {
+        method: "PATCH",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    return await res.json();
+}

@@ -158,10 +158,10 @@ const Cart = () => {
                         <span>Tạm tính:</span>
                         <span>{totalAmounts.toLocaleString()}đ</span>
                     </div>
-                    <div>
+                    {/* <div>
                         <span>Giảm giá:</span>
                         <span>0đ</span>
-                    </div>
+                    </div> */}
                     <div className="cart-total-ui">
                         <span>Tổng cộng:</span>
                         <span>{totalAmounts.toLocaleString()}đ</span>

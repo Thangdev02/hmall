@@ -1,0 +1,403 @@
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Button, Form, Badge, Pagination, Spinner, Alert } from 'react-bootstrap';
+import { motion } from 'framer-motion';
+import { Star, Heart, Search, Filter } from 'react-bootstrap-icons';
+import { Link, useParams } from 'react-router-dom';
+import { getProducts } from '../../api/product';
+import './ProductsShop.css';
+
+const ProductsShop = () => {
+    const { shopId } = useParams(); // Lấy shopId từ URL params
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [showFilters, setShowFilters] = useState(false);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize] = useState(9);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+
+    // Lấy danh sách sản phẩm từ API
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const params = {
+                    pageNumber,
+                    pageSize,
+                    ShopID: shopId,
+                    isActive: true, // Chỉ lấy sản phẩm đang hoạt động
+                };
+
+                if (searchTerm) params.search = searchTerm;
+                if (selectedCategory !== 'all') params.filter = selectedCategory;
+
+                const res = await getProducts(params);
+
+                if (res.statusCode === 200) {
+                    setProducts(res.data.items || []);
+                    setTotalPages(res.data.totalPages || 1);
+                    setTotalItems(res.data.totalRecord || 0);
+                } else {
+                    setError(res.message || 'Không thể tải sản phẩm');
+                }
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                setError('Không thể tải sản phẩm. Vui lòng thử lại.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (shopId) {
+            fetchProducts();
+        }
+    }, [shopId, pageNumber, pageSize, searchTerm, selectedCategory]);
+
+    // Lấy danh sách categories từ sản phẩm
+    const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+
+    // Xử lý tìm kiếm
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setPageNumber(1);
+    };
+
+    // Xử lý thay đổi trang
+    const handlePageChange = (newPage) => {
+        setPageNumber(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Reset bộ lọc
+    const resetFilters = () => {
+        setSearchTerm('');
+        setSelectedCategory('all');
+        setPageNumber(1);
+    };
+
+    if (!shopId) {
+        return (
+            <Container className="py-5">
+                <Alert variant="warning" className="text-center">
+                    <h4>Không tìm thấy thông tin shop</h4>
+                    <p>Vui lòng kiểm tra lại đường dẫn hoặc thông tin shop.</p>
+                </Alert>
+            </Container>
+        );
+    }
+
+    return (
+        <div className="products-shop-page" style={{ paddingTop: "100px" }}>
+            <Container className="py-4">
+                {/* Header */}
+                <div className="shop-header mb-4">
+                    {products.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            <h2 className="shop-name">{products[0].shopName}</h2>
+                            <p className="shop-info text-muted">
+                                📍 {products[0].shopAddress} | 📞 {products[0].shopPhone}
+                            </p>
+                        </motion.div>
+                    )}
+                </div>
+
+                {/* Thanh tìm kiếm và bộ lọc */}
+                <Row className="mb-4">
+                    <Col lg={8}>
+                        <Form onSubmit={handleSearch}>
+                            <div className="position-relative">
+                                <Search
+                                    className="position-absolute"
+                                    style={{
+                                        left: '15px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        color: '#6c757d',
+                                    }}
+                                />
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Tìm kiếm sản phẩm trong shop..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={{
+                                        paddingLeft: '45px',
+                                        borderRadius: '25px',
+                                        border: '2px solid #e9ecef',
+                                    }}
+                                />
+                            </div>
+                        </Form>
+                    </Col>
+                    <Col lg={4} className="d-flex gap-2">
+                        <Button
+                            variant="outline-secondary"
+                            onClick={() => setShowFilters(!showFilters)}
+                            style={{ borderRadius: '25px', minWidth: '120px' }}
+                        >
+                            <Filter className="me-2" />
+                            Bộ lọc
+                        </Button>
+                        {(searchTerm || selectedCategory !== 'all') && (
+                            <Button
+                                variant="outline-danger"
+                                onClick={resetFilters}
+                                style={{ borderRadius: '25px' }}
+                            >
+                                Xóa bộ lọc
+                            </Button>
+                        )}
+                    </Col>
+                </Row>
+
+                {/* Bộ lọc danh mục */}
+                {showFilters && categories.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <Row className="mb-4">
+                            <Col>
+                                <Card className="p-3" style={{ backgroundColor: '#f8f9fa', border: 'none' }}>
+                                    <h6 className="fw-bold mb-3" style={{ color: '#2c3e50' }}>
+                                        Danh mục sản phẩm:
+                                    </h6>
+                                    <div className="d-flex flex-wrap gap-2">
+                                        <Badge
+                                            bg={selectedCategory === 'all' ? 'primary' : 'light'}
+                                            text={selectedCategory === 'all' ? 'white' : 'dark'}
+                                            style={{
+                                                cursor: 'pointer',
+                                                padding: '8px 16px',
+                                                fontSize: '0.9rem',
+                                                backgroundColor: selectedCategory === 'all' ? '#84B4C8' : '#e9ecef',
+                                            }}
+                                            onClick={() => setSelectedCategory('all')}
+                                        >
+                                            Tất cả
+                                        </Badge>
+                                        {categories.map((category) => (
+                                            <Badge
+                                                key={category}
+                                                bg={selectedCategory === category ? 'primary' : 'light'}
+                                                text={selectedCategory === category ? 'white' : 'dark'}
+                                                style={{
+                                                    cursor: 'pointer',
+                                                    padding: '8px 16px',
+                                                    fontSize: '0.9rem',
+                                                    backgroundColor: selectedCategory === category ? '#84B4C8' : '#e9ecef',
+                                                }}
+                                                onClick={() => setSelectedCategory(category)}
+                                            >
+                                                {category}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </Card>
+                            </Col>
+                        </Row>
+                    </motion.div>
+                )}
+
+                {/* Thông tin kết quả */}
+                <Row className="mb-4">
+                    <Col>
+                        <p className="text-muted">
+                            Hiển thị {products.length} trong tổng số {totalItems} sản phẩm
+                            {selectedCategory !== 'all' && (
+                                <span> trong danh mục "<strong>{selectedCategory}</strong>"</span>
+                            )}
+                            {searchTerm && (
+                                <span> cho từ khóa "<strong>{searchTerm}</strong>"</span>
+                            )}
+                        </p>
+                    </Col>
+                </Row>
+
+                {/* Hiển thị lỗi */}
+                {error && (
+                    <Row className="mb-4">
+                        <Col className="text-center">
+                            <Alert variant="danger">{error}</Alert>
+                        </Col>
+                    </Row>
+                )}
+
+                {/* Danh sách sản phẩm */}
+                <Row>
+                    {loading ? (
+                        <Col className="text-center py-5">
+                            <Spinner animation="border" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </Spinner>
+                            <h4 className="mt-3">Đang tải sản phẩm...</h4>
+                        </Col>
+                    ) : products.length > 0 ? (
+                        products.map((product, index) => (
+                            <Col lg={4} md={6} className="mb-4" key={product.id}>
+                                <Link
+                                    style={{ textDecoration: 'none', color: 'inherit' }}
+                                    to={`/products/${product.id}`}
+                                >
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                                    >
+                                        <Card className="product-card h-100">
+                                            <div className="position-relative">
+                                                <Card.Img
+                                                    variant="top"
+                                                    src={product.commonImage || '/images/gallery-1.jpg'}
+                                                    className="product-image"
+                                                    style={{
+                                                        objectFit: 'cover',
+                                                        height: '250px'
+                                                    }}
+                                                />
+                                                {product.status === 'Available' && (
+                                                    <Badge
+                                                        bg="success"
+                                                        className="position-absolute"
+                                                        style={{ top: '10px', left: '10px' }}
+                                                    >
+                                                        Còn hàng
+                                                    </Badge>
+                                                )}
+                                                <Button
+                                                    variant="light"
+                                                    className="position-absolute"
+                                                    style={{
+                                                        top: '10px',
+                                                        right: '10px',
+                                                        borderRadius: '50%',
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    <Heart size={16} />
+                                                </Button>
+                                            </div>
+                                            <Card.Body className="d-flex flex-column">
+                                                <div className="mb-2">
+                                                    <Badge bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                                        {product.category}
+                                                    </Badge>
+                                                </div>
+                                                <Card.Title className="fw-bold" style={{ color: '#2c3e50' }}>
+                                                    {product.name}
+                                                </Card.Title>
+                                                <Card.Text
+                                                    className="text-muted flex-grow-1"
+                                                    style={{
+                                                        fontSize: '0.9rem',
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 3,
+                                                        WebkitBoxOrient: 'vertical',
+                                                        overflow: 'hidden'
+                                                    }}
+                                                >
+                                                    {product.description}
+                                                </Card.Text>
+                                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                                    <span className="fw-bold" style={{ color: '#84B4C8', fontSize: '1.3rem' }}>
+                                                        {product.price?.toLocaleString('vi-VN')}đ
+                                                    </span>
+                                                    <div className="d-flex align-items-center">
+                                                        <Star fill="#ffc107" color="#ffc107" size={16} />
+                                                        <span className="ms-1 text-muted fw-bold">
+                                                            {product.rating}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="d-grid gap-2">
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        style={{ borderRadius: '25px' }}
+                                                    >
+                                                        Xem chi tiết
+                                                    </Button>
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </motion.div>
+                                </Link>
+                            </Col>
+                        ))
+                    ) : (
+                        <Col className="text-center py-5">
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6 }}
+                            >
+                                <h4 className="text-muted mb-3">Không tìm thấy sản phẩm nào</h4>
+                                <p className="text-muted">
+                                    Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem thêm sản phẩm.
+                                </p>
+                                <Button
+                                    className="btn-primary-custom"
+                                    onClick={resetFilters}
+                                >
+                                    Xem Tất Cả Sản Phẩm
+                                </Button>
+                            </motion.div>
+                        </Col>
+                    )}
+                </Row>
+
+                {/* Phân trang */}
+                {totalPages > 1 && (
+                    <Row className="mt-5">
+                        <Col className="d-flex justify-content-center">
+                            <Pagination>
+                                <Pagination.First
+                                    onClick={() => handlePageChange(1)}
+                                    disabled={pageNumber === 1 || loading}
+                                />
+                                <Pagination.Prev
+                                    onClick={() => handlePageChange(pageNumber - 1)}
+                                    disabled={pageNumber === 1 || loading}
+                                />
+                                {[...Array(totalPages)].map((_, index) => (
+                                    <Pagination.Item
+                                        key={index + 1}
+                                        active={pageNumber === index + 1}
+                                        onClick={() => handlePageChange(index + 1)}
+                                        disabled={loading}
+                                    >
+                                        {index + 1}
+                                    </Pagination.Item>
+                                ))}
+                                <Pagination.Next
+                                    onClick={() => handlePageChange(pageNumber + 1)}
+                                    disabled={pageNumber === totalPages || loading}
+                                />
+                                <Pagination.Last
+                                    onClick={() => handlePageChange(totalPages)}
+                                    disabled={pageNumber === totalPages || loading}
+                                />
+                            </Pagination>
+                        </Col>
+                    </Row>
+                )}
+            </Container>
+        </div>
+    );
+};
+
+export default ProductsShop;

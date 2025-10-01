@@ -1,0 +1,372 @@
+/* Shop Profile Styles */
+.shop-profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Cover Section */
+.shop-cover-section {
+  margin-left: -15px;
+  margin-right: -15px;
+  margin-top: -24px;
+  position: relative;
+}
+
+.shop-cover-image {
+  height: 300px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  border-radius: 0 0 15px 15px;
+  overflow: hidden;
+}
+
+.shop-cover-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 30px;
+}
+
+.shop-logo-container {
+  position: relative;
+  z-index: 2;
+}
+
+.shop-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  object-fit: cover;
+  background: white;
+  padding: 4px;
+}
+
+.shop-basic-info {
+  color: white;
+  padding-left: 20px;
+}
+
+.shop-name {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.shop-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rating-star {
+  color: #ffc107;
+  margin-right: 5px;
+  font-size: 1.2rem;
+}
+
+.rating-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.rating-text {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.shop-status {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+}
+
+/* Cards */
+.shop-info-card,
+.owner-info-card,
+.stats-card {
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shop-info-card:hover,
+.owner-info-card:hover,
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+  color: white;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Information Items */
+.info-item {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-item strong {
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.info-icon {
+  margin-right: 8px;
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.info-item p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 1rem;
+  padding-left: 0;
+  font-weight: 500;
+}
+
+/* Stats Card */
+.stats-card .card-body {
+  padding: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 8px;
+  transition: color 0.3s ease;
+}
+
+.stat-item:hover .stat-number {
+  color: white;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.stat-item:hover .stat-label {
+  color: rgba(255,255,255,0.9);
+}
+
+/* Modal Styles */
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+}
+
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.form-control {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Buttons */
+.btn-outline-primary {
+  border-color: #667eea;
+  color: #667eea;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #667eea;
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Alert */
+.alert {
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .shop-cover-image {
+    height: 200px;
+  }
+  
+  .shop-logo {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .shop-name {
+    font-size: 1.8rem;
+  }
+  
+  .shop-basic-info {
+    padding-left: 15px;
+    text-align: center;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .shop-cover-section {
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+  
+  .shop-cover-image {
+    height: 180px;
+    border-radius: 0;
+  }
+  
+  .shop-logo {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .shop-name {
+    font-size: 1.5rem;
+  }
+  
+  .info-item {
+    margin-bottom: 1rem;
+  }
+  
+  .stat-item {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Loading Animation */
+.spinner-border {
+  color: #667eea;
+}
+
+/* Smooth Transitions */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}

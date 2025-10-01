@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { getProductsByShop, deleteProduct, updateProduct } from "../../api/product";
 import { Table, Container, Button, Spinner, Alert, Pagination, Toast, Modal, Form, Row, Col } from "react-bootstrap";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { getProductsByShop, deleteProduct, updateProduct } from "../../api/product";
 import AddProducts from "../../components/AddProducts";
 
 const BASE_API_URL = "https://hmstoresapi.eposh.io.vn/";
@@ -70,7 +72,7 @@ const ShopProducts = () => {
                 const res = await getProductsByShop({ pageNumber, pageSize, shopId }, token);
                 console.log("API response:", res);
                 if (res.statusCode === 200) {
-                    const activeProducts = (res.data.items || []).filter(p => p.isActive === true);
+                    const activeProducts = (res.data.items || []);
                     setProducts(activeProducts);
                     setTotalPages(res.data.totalPages || 1);
                 } else {
@@ -195,7 +197,6 @@ const ShopProducts = () => {
     const handleEditChange = (e) => {
         const { name, value } = e.target;
         setEditForm({ ...editForm, [name]: value });
-        // Real-time validation
         const newErrors = { ...editErrors };
         if (name === "name" && value.trim()) delete newErrors.name;
         if (name === "costPrice" && value > 0) delete newErrors.costPrice;
@@ -203,6 +204,10 @@ const ShopProducts = () => {
         if (name === "stock" && value >= 0) delete newErrors.stock;
         if (name === "category" && value) delete newErrors.category;
         setEditErrors(newErrors);
+    };
+
+    const handleDescriptionChange = (value) => {
+        setEditForm({ ...editForm, description: value });
     };
 
     const handleEditSubmit = async (e) => {
@@ -215,7 +220,7 @@ const ShopProducts = () => {
                 costPrice: Number(editForm.costPrice),
                 price: Number(editForm.price),
                 stock: Number(editForm.stock),
-                moreImages: editForm.moreImages.filter(img => img.url), // Ensure only valid images are sent
+                moreImages: editForm.moreImages.filter(img => img.url),
             };
             const res = await updateProduct(selectedProduct.id, data, token);
             if (res.statusCode === 200 || res.statusCode === 201) {
@@ -393,14 +398,12 @@ const ShopProducts = () => {
                                 </Form.Group>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Mô tả</Form.Label>
-                                    <Form.Control
-                                        name="description"
+                                    <ReactQuill
                                         value={editForm.description}
-                                        onChange={handleEditChange}
-                                        as="textarea"
-                                        rows={3}
-                                        size="sm"
+                                        onChange={handleDescriptionChange}
                                         placeholder="Nhập mô tả sản phẩm"
+                                        theme="snow"
+                                        style={{ height: "150px", marginBottom: "40px" }}
                                     />
                                 </Form.Group>
                                 <Form.Group className="mb-3">

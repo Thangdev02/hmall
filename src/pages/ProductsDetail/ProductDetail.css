@@ -1,101 +1,118 @@
+/* Kiểu cho banner-section */
+.banner-section.product-banner {
+  position: relative;
+  height: 400px;
+  background-image: url("https://d2hijos0r2m9rf.cloudfront.net/uploads/blog_image/blog_75.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 4%;
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55); /* Lớp đen phủ mờ */
+  z-index: 1;
+}
+
+.banner-section .container {
+  position: relative;
+  z-index: 2; /* Để chữ nằm trên overlay */
+}
+
+/* Kiểu cho hình ảnh sản phẩm */
 .main-product-img {
-    width: 100%;
-    height: 420px;
-    object-fit: cover;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  }
-  
-  .thumb-img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: transform 0.3s, border 0.3s;
-  }
-  
-  .thumb-img:hover {
-    transform: scale(1.05);
-  }
-  
-  .thumb-img.active {
-    border: 2px solid #84B4C8;
-  }
-  
-  .product-related-card {
-    border: none;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-  
-  .product-related-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-  }
-  
-  .related-img {
-    height: 180px;
-    object-fit: cover;
-    border-radius: 12px;
-  }
-  /* Review card */
-  .review-card {
-    border-radius: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .review-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  }
-  
-  
-  /* Header user + date */
-  .review-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .review-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .review-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #74b9ff, #a29bfe);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: 600;
-    font-size: 0.9rem;
-  }
-  
-  /* Rating */
-  .review-rating {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0.5rem 0;
-  }
-  
-  .review-rating span {
-    font-weight: 600;
-    color: #444;
-  }
-  
-  /* Comment text */
-  .review-comment {
-    color: #555;
-    line-height: 1.6;
-    margin-bottom: 0;
-    font-size: 0.95rem;
-  }
-  .quantity-control {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.thumb-img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.3s, border 0.3s;
+}
+
+.thumb-img:hover {
+  transform: scale(1.05);
+}
+
+.thumb-img.active {
+  border: 2px solid #84B4C8;
+}
+
+/* Kiểu cho thẻ đánh giá */
+.review-card {
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Header user + date */
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Rating */
+.review-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0.5rem 0;
+}
+
+.review-rating span {
+  font-weight: 600;
+  color: #444;
+}
+
+/* Comment text */
+.review-comment {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+/* Kiểu cho điều khiển số lượng */
+.quantity-control {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -138,3 +155,45 @@
   margin: 0;
 }
 
+/* Kiểu cho nút hành động */
+.btn-primary-custom {
+  background-color: #84B4C8;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 30px;
+}
+
+.btn-primary-custom:hover {
+  background-color: #6a9aa6;
+}
+
+/* Kiểu cho thông báo lỗi */
+.error-section {
+  text-align: center;
+  padding: 50px 0;
+}
+
+.error-section h2 {
+  color: #dc3545; /* Màu đỏ cho thông báo lỗi */
+  margin-bottom: 20px;
+}
+
+.error-section p {
+  color: #6c757d;
+  margin-bottom: 30px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .main-product-img {
+    height: 300px; /* Giảm chiều cao hình ảnh cho di động */
+  }
+  .quantity-input {
+    width: 50px;
+  }
+  .btn-primary-custom,
+  .btn-outline-secondary {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+  }
+}

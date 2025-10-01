@@ -1,56 +1,131 @@
-"use client"
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Badge, Form, Button, Spinner, Alert, Pagination } from "react-bootstrap";
+import { motion } from "framer-motion";
+import { Calendar, Person, Clock, Search, ArrowRight, Heart, HeartFill, ChatDots } from "react-bootstrap-icons";
+import { Link } from "react-router-dom";
+import { getBlogs } from "../../api/blog";
 
-import { useState, useMemo } from "react"
-import { Container, Row, Col, Card, Badge, Form, Button } from "react-bootstrap"
-import { motion } from "framer-motion"
-import { Calendar, Person, Clock, Search, ArrowRight } from "react-bootstrap-icons"
+// Component để xử lý ảnh với fallback
+const BlogImage = ({ src, alt, className, style }) => {
+    const [imageSrc, setImageSrc] = useState(src);
+    const [hasError, setHasError] = useState(false);
 
-import { Link } from "react-router-dom"
-import { blogCategories, blogPosts } from "../../data/blog"
+    useEffect(() => {
+        setImageSrc(src);
+        setHasError(false);
+    }, [src]);
+
+    const handleError = () => {
+        if (!hasError) {
+            setHasError(true);
+            setImageSrc('https://via.placeholder.com/400x200/84B4C8/ffffff?text=Blog+Image');
+        }
+    };
+
+    return (
+        <Card.Img
+            variant="top"
+            src={imageSrc}
+            alt={alt}
+            className={className}
+            style={style}
+            onError={handleError}
+        />
+    );
+};
 
 const Blog = () => {
-    const [selectedCategory, setSelectedCategory] = useState("all")
-    const [searchTerm, setSearchTerm] = useState("")
+    const [blogs, setBlogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize] = useState(9);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
 
-    // Filter blog posts
-    const filteredPosts = useMemo(() => {
-        let filtered = blogPosts
+    // Lấy danh sách blog từ API
+    useEffect(() => {
+        const fetchBlogs = async () => {
+            setLoading(true);
+            setError(null);
 
-        // Filter by category
-        if (selectedCategory !== "all") {
-            filtered = filtered.filter((post) => post.category === selectedCategory)
-        }
+            try {
+                const params = {
+                    pageNumber,
+                    pageSize,
+                };
 
-        // Filter by search term
-        if (searchTerm) {
-            filtered = filtered.filter(
-                (post) =>
-                    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    post.content.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-        }
+                if (searchTerm) params.search = searchTerm;
+                if (selectedCategory !== 'all') params.filter = selectedCategory;
 
-        return filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
-    }, [selectedCategory, searchTerm])
+                const res = await getBlogs(params);
 
+                if (res.statusCode === 200) {
+                    setBlogs(res.data.items || []);
+                    setTotalPages(res.data.totalPages || 1);
+                    setTotalItems(res.data.totalRecord || 0);
+                } else {
+                    setError(res.message || 'Không thể tải bài viết');
+                }
+            } catch (error) {
+                console.error('Error fetching blogs:', error);
+                setError('Không thể tải bài viết. Vui lòng thử lại.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBlogs();
+    }, [pageNumber, pageSize, searchTerm, selectedCategory]);
+
+    // Lấy danh sách categories từ blogs (có thể mở rộng sau)
+    const blogCategories = [
+        { id: "all", name: "Tất cả" },
+        { id: "tutorial", name: "Hướng dẫn" },
+        { id: "tips", name: "Mẹo hay" },
+        { id: "inspiration", name: "Cảm hứng" },
+        { id: "review", name: "Đánh giá" },
+    ];
+
+    // Format date
     const formatDate = (dateString) => {
-        const date = new Date(dateString)
+        const date = new Date(dateString);
         return date.toLocaleDateString("vi-VN", {
             year: "numeric",
             month: "long",
             day: "numeric",
-        })
-    }
+        });
+    };
 
-    const featuredPost = blogPosts[0]
-    const regularPosts = filteredPosts.slice(1)
+    // Xử lý tìm kiếm
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setPageNumber(1);
+    };
+
+    // Xử lý thay đổi trang
+    const handlePageChange = (newPage) => {
+        setPageNumber(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Reset bộ lọc
+    const resetFilters = () => {
+        setSearchTerm('');
+        setSelectedCategory('all');
+        setPageNumber(1);
+    };
+
+    const featuredPost = blogs[0];
+    const regularPosts = blogs.slice(1);
 
     return (
         <div style={{ paddingTop: "100px", minHeight: "100vh" }}>
             <Container>
                 {/* Page Header */}
-                <section className="banner-section blog-banner">
+                <section className="banner-section blog-banner mb-5">
                     <div className="banner-overlay"></div>
                     <Container className="h-100">
                         <Row className="h-100 align-items-center justify-content-center text-center">
@@ -72,32 +147,44 @@ const Blog = () => {
                     </Container>
                 </section>
 
-
                 {/* Search and Filter */}
-                <Row className="mb-5">
+                <Row className="mb-4">
                     <Col lg={8}>
-                        <div className="position-relative">
-                            <Search
-                                className="position-absolute"
-                                style={{
-                                    left: "15px",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                    color: "#6c757d",
-                                }}
-                            />
-                            <Form.Control
-                                type="text"
-                                placeholder="Tìm kiếm bài viết..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{
-                                    paddingLeft: "45px",
-                                    borderRadius: "25px",
-                                    border: "2px solid #e9ecef",
-                                }}
-                            />
-                        </div>
+                        <Form onSubmit={handleSearch}>
+                            <div className="position-relative">
+                                <Search
+                                    className="position-absolute"
+                                    style={{
+                                        left: "15px",
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        color: "#6c757d",
+                                    }}
+                                />
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Tìm kiếm bài viết..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    style={{
+                                        paddingLeft: "45px",
+                                        borderRadius: "25px",
+                                        border: "2px solid #e9ecef",
+                                    }}
+                                />
+                            </div>
+                        </Form>
+                    </Col>
+                    <Col lg={4} className="d-flex gap-2">
+                        {(searchTerm || selectedCategory !== 'all') && (
+                            <Button
+                                variant="outline-danger"
+                                onClick={resetFilters}
+                                style={{ borderRadius: '25px' }}
+                            >
+                                Xóa bộ lọc
+                            </Button>
+                        )}
                     </Col>
                 </Row>
 
@@ -126,8 +213,32 @@ const Blog = () => {
                     </Col>
                 </Row>
 
+                {/* Results Info */}
+                <Row className="mb-4">
+                    <Col>
+                        <p className="text-muted">
+                            Hiển thị {blogs.length} trong tổng số {totalItems} bài viết
+                            {selectedCategory !== 'all' && (
+                                <span> trong danh mục "<strong>{blogCategories.find(cat => cat.id === selectedCategory)?.name}</strong>"</span>
+                            )}
+                            {searchTerm && (
+                                <span> cho từ khóa "<strong>{searchTerm}</strong>"</span>
+                            )}
+                        </p>
+                    </Col>
+                </Row>
+
+                {/* Error Message */}
+                {error && (
+                    <Row className="mb-4">
+                        <Col className="text-center">
+                            <Alert variant="danger">{error}</Alert>
+                        </Col>
+                    </Row>
+                )}
+
                 {/* Featured Post */}
-                {selectedCategory === "all" && !searchTerm && (
+                {featuredPost && selectedCategory === "all" && !searchTerm && !loading && (
                     <Row className="mb-5">
                         <Col>
                             <motion.div
@@ -136,7 +247,6 @@ const Blog = () => {
                                 transition={{ duration: 0.6, delay: 0.2 }}
                             >
                                 <Card
-                                    className="featured-post"
                                     style={{
                                         border: "none",
                                         borderRadius: "20px",
@@ -146,8 +256,8 @@ const Blog = () => {
                                 >
                                     <Row className="g-0">
                                         <Col md={6}>
-                                            <Card.Img
-                                                src={featuredPost.image}
+                                            <BlogImage
+                                                src={featuredPost.image || 'https://via.placeholder.com/400x400/84B4C8/ffffff?text=Blog+Image'}
                                                 alt={featuredPost.title}
                                                 style={{ height: "400px", objectFit: "cover" }}
                                             />
@@ -165,22 +275,30 @@ const Blog = () => {
                                                     <Card.Title className="fw-bold mb-3" style={{ color: "#2c3e50", fontSize: "1.5rem" }}>
                                                         {featuredPost.title}
                                                     </Card.Title>
-                                                    <Card.Text className="text-muted mb-4" style={{ lineHeight: "1.6" }}>
-                                                        {featuredPost.excerpt}
-                                                    </Card.Text>
                                                 </div>
                                                 <div className="mt-auto">
                                                     <div className="d-flex align-items-center mb-3 text-muted">
                                                         <Person size={16} className="me-2" />
                                                         <span className="me-3">{featuredPost.author}</span>
                                                         <Calendar size={16} className="me-2" />
-                                                        <span className="me-3">{formatDate(featuredPost.date)}</span>
-                                                        <Clock size={16} className="me-2" />
-                                                        <span>{featuredPost.readTime}</span>
+                                                        <span className="me-3">{formatDate(featuredPost.publishDate)}</span>
+                                                        <Heart size={16} className="me-2" />
+                                                        <span className="me-3">{featuredPost.totalLike}</span>
+                                                        <ChatDots size={16} className="me-2" />
+                                                        <span>{featuredPost.totalComment}</span>
                                                     </div>
-                                                    <Button className="btn-primary-custom">
-                                                        Đọc tiếp <ArrowRight className="ms-2" />
-                                                    </Button>
+                                                    <Link to={`/blog/${featuredPost.id}`} style={{ textDecoration: 'none' }}>
+                                                        <Button style={{
+                                                            background: "linear-gradient(135deg, #84B4C8 0%, #B2D9EA 100%)",
+                                                            border: "none",
+                                                            borderRadius: "25px",
+                                                            padding: "12px 30px",
+                                                            fontWeight: "600",
+                                                            color: "white"
+                                                        }}>
+                                                            Đọc tiếp <ArrowRight className="ms-2" />
+                                                        </Button>
+                                                    </Link>
                                                 </div>
                                             </Card.Body>
                                         </Col>
@@ -191,32 +309,17 @@ const Blog = () => {
                     </Row>
                 )}
 
-                {/* Results Info */}
-                <Row className="mb-4">
-                    <Col>
-                        <p className="text-muted">
-                            Hiển thị {filteredPosts.length} bài viết
-                            {selectedCategory !== "all" && (
-                                <span>
-                                    {" "}
-                                    trong danh mục "<strong>{blogCategories.find((cat) => cat.id === selectedCategory)?.name}</strong>"
-                                </span>
-                            )}
-                            {searchTerm && (
-                                <span>
-                                    {" "}
-                                    cho từ khóa "<strong>{searchTerm}</strong>"
-                                </span>
-                            )}
-                        </p>
-                    </Col>
-                </Row>
-
                 {/* Blog Posts Grid */}
                 <Row>
-                    {filteredPosts.length > 0 ? (
-                        filteredPosts.map((post, index) => (
-
+                    {loading ? (
+                        <Col className="text-center py-5">
+                            <Spinner animation="border" role="status" style={{ color: "#84B4C8" }}>
+                                <span className="visually-hidden">Đang tải...</span>
+                            </Spinner>
+                            <h4 className="mt-3">Đang tải bài viết...</h4>
+                        </Col>
+                    ) : regularPosts.length > 0 || (featuredPost && (selectedCategory !== "all" || searchTerm)) ? (
+                        (selectedCategory !== "all" || searchTerm ? blogs : regularPosts).map((post, index) => (
                             <Col lg={4} md={6} className="mb-4" key={post.id}>
                                 <Link style={{ textDecoration: "none", color: "inherit" }} to={`/blog/${post.id}`}>
                                     <motion.div
@@ -234,53 +337,51 @@ const Blog = () => {
                                                 transition: "all 0.3s ease",
                                             }}
                                             onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = "translateY(-10px)"
-                                                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.15)"
+                                                e.currentTarget.style.transform = "translateY(-10px)";
+                                                e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.15)";
                                             }}
                                             onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = "translateY(0)"
-                                                e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)"
+                                                e.currentTarget.style.transform = "translateY(0)";
+                                                e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.08)";
                                             }}
                                         >
-                                            <Card.Img
-                                                variant="top"
-                                                src={post.image}
+                                            <BlogImage
+                                                src={post.image || 'https://via.placeholder.com/400x200/84B4C8/ffffff?text=Blog+Image'}
                                                 alt={post.title}
                                                 style={{ height: "200px", objectFit: "cover" }}
                                             />
                                             <Card.Body className="p-4 d-flex flex-column">
-                                                <div className="mb-2">
-                                                    <Badge bg="light" text="dark" style={{ fontSize: "0.75rem", backgroundColor: "#f8f9fa" }}>
-                                                        {post.category}
-                                                    </Badge>
-                                                </div>
-
                                                 <Card.Title className="fw-bold mb-3" style={{ color: "#2c3e50", fontSize: "1.1rem" }}>
                                                     {post.title}
                                                 </Card.Title>
-
-                                                <Card.Text className="text-muted flex-grow-1" style={{ fontSize: "0.9rem", lineHeight: "1.6" }}>
-                                                    {post.excerpt}
-                                                </Card.Text>
 
                                                 <div className="mt-auto">
                                                     <div className="d-flex align-items-center mb-3 text-muted" style={{ fontSize: "0.8rem" }}>
                                                         <Person size={14} className="me-1" />
                                                         <span className="me-3">{post.author}</span>
                                                         <Calendar size={14} className="me-1" />
-                                                        <span className="me-3">{formatDate(post.date)}</span>
-                                                        <Clock size={14} className="me-1" />
-                                                        <span>{post.readTime}</span>
+                                                        <span className="me-3">{formatDate(post.publishDate)}</span>
                                                     </div>
-                                                    <Button variant="outline-primary" size="sm" style={{ borderRadius: "20px" }}>
-                                                        Đọc thêm
-                                                    </Button>
+                                                    <div className="d-flex justify-content-between align-items-center gap-2">
+                                                        <div className="d-flex align-items-center gap-2 text-muted" style={{ fontSize: "0.8rem" }}>
+                                                            <div className="d-flex align-items-center">
+                                                                <Heart size={14} className="me-1" />
+                                                                <span>{post.totalLike}</span>
+                                                            </div>
+                                                            <div className="d-flex align-items-center">
+                                                                <ChatDots size={14} />
+                                                                <span>{post.totalComment}</span>
+                                                            </div>
+                                                        </div>
+                                                        <Button variant="outline-primary" size="sm" style={{ borderRadius: "20px" }}>
+                                                            Đọc thêm
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </Card.Body>
                                         </Card>
                                     </motion.div>
                                 </Link>
-
                             </Col>
                         ))
                     ) : (
@@ -289,11 +390,15 @@ const Blog = () => {
                                 <h4 className="text-muted mb-3">Không tìm thấy bài viết nào</h4>
                                 <p className="text-muted">Hãy thử thay đổi từ khóa tìm kiếm hoặc danh mục để xem thêm bài viết.</p>
                                 <Button
-                                    className="btn-primary-custom"
-                                    onClick={() => {
-                                        setSearchTerm("")
-                                        setSelectedCategory("all")
+                                    style={{
+                                        background: "linear-gradient(135deg, #84B4C8 0%, #B2D9EA 100%)",
+                                        border: "none",
+                                        borderRadius: "25px",
+                                        padding: "12px 30px",
+                                        fontWeight: "600",
+                                        color: "white"
                                     }}
+                                    onClick={resetFilters}
                                 >
                                     Xem Tất Cả Bài Viết
                                 </Button>
@@ -301,6 +406,42 @@ const Blog = () => {
                         </Col>
                     )}
                 </Row>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <Row className="mt-5">
+                        <Col className="d-flex justify-content-center">
+                            <Pagination>
+                                <Pagination.First
+                                    onClick={() => handlePageChange(1)}
+                                    disabled={pageNumber === 1 || loading}
+                                />
+                                <Pagination.Prev
+                                    onClick={() => handlePageChange(pageNumber - 1)}
+                                    disabled={pageNumber === 1 || loading}
+                                />
+                                {[...Array(totalPages)].map((_, index) => (
+                                    <Pagination.Item
+                                        key={index + 1}
+                                        active={pageNumber === index + 1}
+                                        onClick={() => handlePageChange(index + 1)}
+                                        disabled={loading}
+                                    >
+                                        {index + 1}
+                                    </Pagination.Item>
+                                ))}
+                                <Pagination.Next
+                                    onClick={() => handlePageChange(pageNumber + 1)}
+                                    disabled={pageNumber === totalPages || loading}
+                                />
+                                <Pagination.Last
+                                    onClick={() => handlePageChange(totalPages)}
+                                    disabled={pageNumber === totalPages || loading}
+                                />
+                            </Pagination>
+                        </Col>
+                    </Row>
+                )}
 
                 {/* Newsletter Subscription */}
                 <section
@@ -340,7 +481,7 @@ const Blog = () => {
                 </section>
             </Container>
         </div>
-    )
-}
+    );
+};
 
-export default Blog
+export default Blog;

@@ -26,11 +26,13 @@ import AdminLayout from "./pages/Admin/AdminLayout";
 import DashboardHome from "./pages/Admin/DashboardHome";
 import ProductsManager from "./pages/Admin/ProductsManager";
 import PostsManager from "./pages/Admin/PostsManager";
+import ShopProfile from "./pages/ShopProfile/ShopProfile";
+import Shop from "./pages/Shop/Shop";
+import ProductsShop from "./pages/ProductsInShop/ProductsShop";
 
 // Dummy shop pages
 const ShopDashboard = () => <div style={{ padding: 40 }}>Shop Dashboard</div>;
 const ShopOrders = () => <div style={{ padding: 40 }}>Shop Orders</div>;
-const ShopProfile = () => <div style={{ padding: 40 }}>Shop Profile</div>;
 
 // RoleEnum mapping
 const RoleEnum = {
@@ -117,6 +119,20 @@ const AppContent = () => {
               </PageTransition>
             }
           />
+          <Route
+            path="/shop"
+            element={
+              <PageTransition>
+                <Shop />
+              </PageTransition>
+            }
+          />
+          <Route path="/shop/:shopId/products" element={
+            <PageTransition>
+              <ProductsShop />
+            </PageTransition>
+
+          } />
           <Route
             path="/about"
             element={

@@ -3,12 +3,13 @@ import React from "react";
 import { Modal, Button, Form, Spinner, Alert, Row, Col } from "react-bootstrap";
 import { uploadMultipleFiles } from "../api/upload";
 import { createProduct } from "../api/product";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const BASE_API_URL = "https://hmstoresapi.eposh.io.vn/";
 
 // Predefined categories extracted from API data
 const CATEGORIES = [
-
     "Đồ decor",
     "Đồ gia dụng",
     "Phụ kiện",
@@ -31,7 +32,7 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
         stock: "",
         material: "",
         commonImage: "",
-        category: "", // Initialize as empty for dropdown
+        category: "",
         moreImage: [{ url: "" }],
     });
     const [errors, setErrors] = useState({});
@@ -66,7 +67,6 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm({ ...form, [name]: value });
-        // Real-time validation
         const newErrors = { ...errors };
         if (name === "name" && value.trim()) delete newErrors.name;
         if (name === "costPrice" && value > 0) delete newErrors.costPrice;
@@ -74,6 +74,10 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
         if (name === "stock" && value >= 0) delete newErrors.stock;
         if (name === "category" && value) delete newErrors.category;
         setErrors(newErrors);
+    };
+
+    const handleDescriptionChange = (value) => {
+        setForm({ ...form, description: value });
     };
 
     const handleCommonImageChange = async (e) => {
@@ -219,14 +223,12 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
                             </Form.Group>
                             <Form.Group className="mb-3">
                                 <Form.Label>Mô tả</Form.Label>
-                                <Form.Control
-                                    name="description"
+                                <ReactQuill
                                     value={form.description}
-                                    onChange={handleChange}
-                                    as="textarea"
-                                    rows={4}
-                                    size="sm"
+                                    onChange={handleDescriptionChange}
                                     placeholder="Nhập mô tả sản phẩm"
+                                    theme="snow"
+                                    style={{ height: "150px", marginBottom: "40px" }}
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">

@@ -48,6 +48,11 @@ const NavigationBar = () => {
                 <Grid3x3Gap className="me-1" /> Sản phẩm
               </Nav.Link>
             </LinkContainer>
+            <LinkContainer to="/shop">
+              <Nav.Link className="nav-link-custom">
+                <Grid3x3Gap className="me-1" />Cửa hàng
+              </Nav.Link>
+            </LinkContainer>
 
             <LinkContainer to="/about">
               <Nav.Link className="nav-link-custom">

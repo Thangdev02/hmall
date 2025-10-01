@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Form, Badge, Pagination } from "react-bootstrap";
 import { motion } from "framer-motion";
@@ -16,12 +15,10 @@ const Products = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
-    const [pageSize, setPageSize] = useState(9); // Ban đầu lấy 9 sản phẩm
-    const [totalItems, setTotalItems] = useState(0); // Tổng số sản phẩm
-    const [showLoadMore, setShowLoadMore] = useState(true); // Hiển thị nút "Xem Thêm" ban đầu
+    const [pageSize, setPageSize] = useState(9);
+    const [totalItems, setTotalItems] = useState(0);
+    const [showLoadMore, setShowLoadMore] = useState(true);
 
-    // Lấy sản phẩm từ API
-    // ...existing code...
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
@@ -40,7 +37,6 @@ const Products = () => {
                 const data = res?.data?.items || [];
                 setProducts(data);
                 setTotalItems(res?.data?.totalRecord || data.length);
-
             } catch (error) {
                 console.error(error);
                 setError("Không thể tải sản phẩm. Vui lòng thử lại.");
@@ -51,14 +47,12 @@ const Products = () => {
 
         fetchProducts();
     }, [pageNumber, pageSize, selectedCategory, searchTerm]);
-    // ...existing code...
-    // Tạo danh sách danh mục từ sản phẩm
+
     const categories = useMemo(() => {
         const set = new Set(products.map((p) => p.category).filter(Boolean));
         return Array.from(set);
     }, [products]);
 
-    // Sắp xếp sản phẩm (client-side)
     const filteredProducts = useMemo(() => {
         let filtered = [...products];
         filtered.sort((a, b) => {
@@ -77,27 +71,23 @@ const Products = () => {
         return filtered;
     }, [products, sortBy]);
 
-    // Xử lý nút "Xem Thêm Sản Phẩm"
     const handleLoadMore = () => {
         setPageSize(12);
         setPageNumber(1);
         setShowLoadMore(false);
     };
 
-    // Tính tổng số trang
     const totalPages = Math.ceil(totalItems / pageSize);
 
-    // Xử lý thay đổi trang
     const handlePageChange = (newPage) => {
         setPageNumber(newPage);
-        setPageSize(12); // Giữ pageSize là 12 khi dùng phân trang
-        setShowLoadMore(false); // Ẩn nút "Xem Thêm" khi dùng phân trang
+        setPageSize(12);
+        setShowLoadMore(false);
     };
 
     return (
         <div style={{ paddingTop: "100px", minHeight: "100vh" }}>
             <Container>
-                {/* Tiêu đề trang */}
                 <section className="banner-section">
                     <div className="banner-overlay"></div>
                     <Container className="h-100">
@@ -118,7 +108,6 @@ const Products = () => {
                     </Container>
                 </section>
 
-                {/* Thanh tìm kiếm và bộ lọc */}
                 <Row className="mb-4">
                     <Col lg={8}>
                         <div className="position-relative">
@@ -166,7 +155,6 @@ const Products = () => {
                     </Col>
                 </Row>
 
-                {/* Bộ lọc danh mục */}
                 {showFilters && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -218,7 +206,6 @@ const Products = () => {
                     </motion.div>
                 )}
 
-                {/* Thông tin kết quả */}
                 <Row className="mb-4">
                     <Col>
                         <p className="text-muted">
@@ -239,7 +226,6 @@ const Products = () => {
                     </Col>
                 </Row>
 
-                {/* Hiển thị lỗi nếu có */}
                 {error && (
                     <Row className="mb-4">
                         <Col className="text-center">
@@ -248,7 +234,6 @@ const Products = () => {
                     </Row>
                 )}
 
-                {/* Lưới sản phẩm */}
                 <Row>
                     {loading ? (
                         <Col className="text-center py-5">
@@ -269,11 +254,14 @@ const Products = () => {
                                                     variant="top"
                                                     src={product.commonImage || "public/images/gallery-1.jpg"}
                                                     className="product-image"
-                                                    style={{ objectFit: "cover" }}
                                                 />
-                                                {product.status === "InStock" && (
+                                                {product.isActive === true ? (
                                                     <Badge bg="success" className="position-absolute" style={{ top: "10px", left: "10px" }}>
                                                         Còn hàng
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge bg="danger" className="position-absolute" style={{ top: "10px", left: "10px" }}>
+                                                        Hết hàng
                                                     </Badge>
                                                 )}
                                                 <Button
@@ -293,17 +281,17 @@ const Products = () => {
                                                     <Heart size={16} />
                                                 </Button>
                                             </div>
-                                            <Card.Body className="d-flex flex-column">
+                                            <Card.Body className="card-body">
                                                 <div className="mb-2">
                                                     <Badge bg="light" text="dark" style={{ fontSize: "0.75rem" }}>
                                                         {product.category}
                                                     </Badge>
                                                 </div>
-                                                <Card.Title className="fw-bold" style={{ color: "#2c3e50" }}>
+                                                <Card.Title className="fw-bold card-title" style={{ color: "#2c3e50" }}>
                                                     {product.name}
                                                 </Card.Title>
-                                                <Card.Text className="text-muted flex-grow-1" style={{ fontSize: "0.9rem" }}>
-                                                    {product.description}
+                                                <Card.Text className="text-muted card-text" style={{ fontSize: "0.9rem" }}>
+                                                    <div dangerouslySetInnerHTML={{ __html: product.description }} />
                                                 </Card.Text>
                                                 <div className="d-flex justify-content-between align-items-center mb-3">
                                                     <span className="fw-bold" style={{ color: "#84B4C8", fontSize: "1.3rem" }}>
@@ -311,7 +299,7 @@ const Products = () => {
                                                     </span>
                                                     <div className="d-flex align-items-center">
                                                         <Star fill="#ffc107" color="#ffc107" size={16} />
-                                                        <span className="ms-1 text-muted fw-bold">{product.rating || 5}</span>
+                                                        <span className="ms-1 text-muted fw-bold">{product.rating}</span>
                                                     </div>
                                                 </div>
                                                 <div className="d-grid gap-2">
@@ -344,7 +332,6 @@ const Products = () => {
                     )}
                 </Row>
 
-                {/* Nút Xem Thêm và Phân trang */}
                 {filteredProducts.length > 0 && (
                     <Row className="mt-5">
                         <Col className="text-center">

@@ -1,5 +1,3 @@
-"use client"
-
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { Container, Row, Col, Button, Badge, Card, Form, Modal, Toast, ToastContainer } from "react-bootstrap"
 import { motion } from "framer-motion"
@@ -7,6 +5,8 @@ import { Star, Heart } from "react-bootstrap-icons"
 import { useState, useEffect } from "react"
 import { getProductDetail } from "../../api/product"
 import { addItemToCart } from "../../api/cart"
+import ReactQuill from "react-quill"
+import "react-quill/dist/quill.snow.css"
 import LoadingSpinner from "../../components/LoadingSpinner"
 import "./ProductDetail.css"
 
@@ -15,6 +15,7 @@ const ProductDetail = () => {
   const navigate = useNavigate()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
   const [selectedImage, setSelectedImage] = useState("")
   const [reviews, setReviews] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -27,8 +28,12 @@ const ProductDetail = () => {
 
   useEffect(() => {
     setLoading(true)
+    setErrorMessage(null)
     getProductDetail(id)
       .then(res => {
+        if (res?.statusCode === 404) {
+          throw new Error("Product not found")
+        }
         const p = res?.data
         setProduct(p)
         const allImages = [
@@ -39,6 +44,14 @@ const ProductDetail = () => {
         setProduct(prev => ({ ...prev, allImages }))
         setReviews([])
       })
+      .catch(error => {
+        if (error.response?.status === 404 || error.message === "Product not found") {
+          setErrorMessage("Sản phẩm đã hết hàng, vui lòng tham khảo sản phẩm khác")
+        } else {
+          setErrorMessage("Có lỗi xảy ra khi tải sản phẩm")
+        }
+        setProduct(null)
+      })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -46,13 +59,14 @@ const ProductDetail = () => {
     return <LoadingSpinner />
   }
 
-  if (!product) {
+  if (!product || errorMessage) {
     return (
-      <Container style={{ paddingTop: "120px", minHeight: "100vh" }}>
-        <h2 className="text-center text-muted">Sản phẩm không tồn tại</h2>
+      <Container style={{ paddingTop: "120px", minHeight: "100vh" }} className="error-section">
+        <h2 className="text-center">{errorMessage || "Sản phẩm không tồn tại"}</h2>
+        <p className="text-center">Khám phá thêm các sản phẩm thủ công độc đáo khác của chúng tôi!</p>
         <div className="text-center mt-3">
           <Link to="/products">
-            <Button variant="primary">Quay lại cửa hàng</Button>
+            <Button variant="primary" className="btn-primary-custom">Quay lại cửa hàng</Button>
           </Link>
         </div>
       </Container>
@@ -72,21 +86,18 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = async () => {
-    // Check if product is out of stock
-    if (product.stock === 0) {
+    if (!product.isActive) {
       setToastMessage("Sản phẩm đã hết hàng!")
       setShowToast(true)
       return
     }
 
-    // Check if quantity exceeds stock
     if (cartQuantity > product.stock) {
       setToastMessage(`Chỉ còn ${product.stock} sản phẩm trong kho!`)
       setShowToast(true)
       return
     }
 
-    // Check if user is logged in
     if (!token) {
       setToastMessage("Vui lòng đăng nhập để thêm vào giỏ hàng!")
       setShowToast(true)
@@ -98,12 +109,10 @@ const ProductDetail = () => {
       if (res && res.statusCode === 200) {
         setToastMessage(`Đã thêm ${cartQuantity} sản phẩm vào giỏ hàng!`)
         setShowToast(true)
-        setCartQuantity(1) // Reset quantity to 1 after adding
-
-        // Navigate to cart page after successful addition
+        setCartQuantity(1)
         setTimeout(() => {
           navigate('/cart')
-        }, 1000) // Wait 1 second to show toast message
+        }, 1000)
       } else {
         setToastMessage(res.message || "Thêm vào giỏ hàng thất bại!")
         setShowToast(true)
@@ -145,7 +154,7 @@ const ProductDetail = () => {
           {/* Hình ảnh */}
           <Col lg={6} className="mb-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
-              <img src={selectedImage} alt={product.name} className="main-product-img" style={{ width: "100%", height: "500px", objectFit: "cover" }} />
+              <img src={selectedImage} alt={product.name} className="main-product-img" />
             </motion.div>
             <div className="d-flex gap-3 mt-3 flex-wrap">
               {(product.allImages || []).map((img, idx) => (
@@ -169,15 +178,15 @@ const ProductDetail = () => {
                 <Star fill="#ffc107" color="#ffc107" size={20} />
                 <span className="ms-2 fw-bold">{product.rating || 5}</span>
                 <Badge
-                  bg={product.status === "Available" || product.status === "InStock" ? "success" : "danger"}
+                  bg={product.isActive ? "success" : "danger"}
                   className="ms-3"
                   style={{ fontSize: "0.9rem" }}
                 >
-                  {product.status === "Available" || product.status === "InStock" ? "Còn hàng" : "Hết hàng"}
+                  {product.isActive ? "Còn hàng" : "Hết hàng"}
                 </Badge>
               </div>
               <h3 className="fw-bold mb-4 text-primary">{product.price?.toLocaleString("vi-VN")}đ</h3>
-              <p className="text-muted mb-2">{product.description}</p>
+              <div className="text-muted mb-2" dangerouslySetInnerHTML={{ __html: product.description }} />
               <ul className="text-muted">
                 <li>Chất liệu: {product.material}</li>
                 <li>Danh mục: {product.category}</li>
@@ -189,7 +198,7 @@ const ProductDetail = () => {
                   variant="outline-secondary"
                   size="sm"
                   onClick={() => setCartQuantity(prev => Math.max(1, prev - 1))}
-                  disabled={cartQuantity <= 1}
+                  disabled={cartQuantity <= 1 || !product.isActive}
                   className="quantity-btn"
                 >
                   −
@@ -202,12 +211,13 @@ const ProductDetail = () => {
                   onChange={e => setCartQuantity(Math.max(1, Math.min(Number(e.target.value), product.stock || 100)))}
                   className="quantity-input"
                   aria-label="Số lượng sản phẩm"
+                  disabled={!product.isActive}
                 />
                 <Button
                   variant="outline-secondary"
                   size="sm"
                   onClick={() => setCartQuantity(prev => Math.min(prev + 1, product.stock || 100))}
-                  disabled={cartQuantity >= (product.stock || 100)}
+                  disabled={cartQuantity >= (product.stock || 100) || !product.isActive}
                   className="quantity-btn"
                 >
                   +
@@ -215,10 +225,10 @@ const ProductDetail = () => {
               </div>
               {/* Action Buttons */}
               <div className="d-flex gap-3 mt-4 align-items-center">
-                <Button size="lg" className="btn-primary-custom">
+                <Button size="lg" className="btn-primary-custom" disabled={!product.isActive}>
                   Mua Ngay
                 </Button>
-                <Button size="lg" variant="outline-secondary" onClick={handleAddToCart}>
+                <Button size="lg" variant="outline-secondary" onClick={handleAddToCart} disabled={!product.isActive}>
                   Thêm Vào Giỏ
                 </Button>
                 <Button
@@ -247,11 +257,14 @@ const ProductDetail = () => {
                 <Col lg={3} md={6} sm={12} key={idx} className="mb-4">
                   <Card className="h-100 shadow-sm review-card">
                     <Card.Body>
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h6 className="fw-bold mb-0">{review.user}</h6>
+                      <div className="review-header">
+                        <div className="review-user">
+                          <div className="review-avatar">{review.user.charAt(0).toUpperCase()}</div>
+                          <h6 className="fw-bold mb-0">{review.user}</h6>
+                        </div>
                         <small className="text-muted">{review.date}</small>
                       </div>
-                      <div className="d-flex align-items-center mb-2">
+                      <div className="review-rating">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
@@ -260,9 +273,9 @@ const ProductDetail = () => {
                             color={i < review.rating ? "#ffc107" : "lightgray"}
                           />
                         ))}
-                        <span className="ms-2 fw-bold">{review.rating}/5</span>
+                        <span>{review.rating}/5</span>
                       </div>
-                      <p className="text-muted mb-0">{review.comment}</p>
+                      <div className="review-comment" dangerouslySetInnerHTML={{ __html: review.comment }} />
                     </Card.Body>
                   </Card>
                 </Col>
@@ -310,12 +323,12 @@ const ProductDetail = () => {
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Nhận xét</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  placeholder="Chia sẻ trải nghiệm của bạn..."
+                <ReactQuill
                   value={newReview.comment}
-                  onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                  onChange={(value) => setNewReview({ ...newReview, comment: value })}
+                  placeholder="Chia sẻ trải nghiệm của bạn..."
+                  theme="snow"
+                  style={{ height: "150px", marginBottom: "40px" }}
                 />
               </Form.Group>
             </Form>

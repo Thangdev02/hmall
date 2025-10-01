@@ -13,6 +13,18 @@ export async function getProducts({ pageNumber = 1, pageSize = 20, search = "", 
     const res = await fetch(`${BASE_URL}/api/v1/products/get-products?${params.toString()}`);
     return res.json();
 }
+export async function getProductsByShopID({ pageNumber = 1, pageSize = 20, search = "", filter = "", isActive, ShopID } = {}) {
+    const params = new URLSearchParams();
+    params.append("pageNumber", pageNumber);
+    params.append("pageSize", pageSize);
+    if (search) params.append("search", search);
+    if (filter) params.append("filter", filter);
+    if (isActive !== undefined) params.append("isActive", isActive);
+    if (ShopID) params.append("ShopID", ShopID);
+
+    const res = await fetch(`${BASE_URL}/api/v1/products/get-products?${params.toString()}`);
+    return res.json();
+}
 export async function getProductDetail(productId) {
     const params = new URLSearchParams();
     params.append("productId", productId);

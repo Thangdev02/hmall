@@ -25,4 +25,104 @@
     position: relative;
     z-index: 2; /* để chữ nằm trên overlay */
   }
-  
+  /* Đảm bảo các thẻ sản phẩm có kích thước bằng nhau */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 450px; /* Chiều cao cố định cho tất cả thẻ */
+  overflow: hidden; /* Ngăn nội dung tràn ra ngoài */
+  border: none; /* Tùy chọn: loại bỏ viền mặc định của card */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Tùy chọn: thêm bóng nhẹ */
+}
+
+.product-image {
+  height: 200px; /* Chiều cao cố định cho hình ảnh */
+  object-fit: cover; /* Đảm bảo hình ảnh co giãn đúng mà không bị méo */
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Phân bổ không gian đều */
+  flex-grow: 1; /* Cho phép phần thân chiếm toàn bộ không gian còn lại */
+  padding: 1rem; /* Đảm bảo padding đồng đều */
+}
+
+.card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Giới hạn mô tả ở 3 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Thêm dấu ba chấm cho văn bản bị cắt */
+  max-height: 4.5em; /* Chiều cao xấp xỉ cho 3 dòng văn bản */
+  line-height: 1.5em; /* Điều chỉnh chiều cao dòng cho nhất quán */
+}
+
+.card-title {
+  font-size: 1.1rem; /* Kích thước tiêu đề đồng nhất */
+  margin-bottom: 0.5rem;
+  white-space: nowrap; /* Ngăn tiêu đề xuống dòng */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Dấu ba chấm cho tiêu đề dài */
+}
+
+/* Đảm bảo nút "Xem chi tiết" có kích thước đồng đều */
+.card-body .btn {
+  width: 100%; /* Nút chiếm toàn bộ chiều rộng */
+}
+
+/* Responsive design cho màn hình nhỏ */
+@media (max-width: 768px) {
+  .product-card {
+    height: 400px; /* Chiều cao nhỏ hơn cho di động */
+  }
+  .product-image {
+    height: 150px; /* Chiều cao hình ảnh nhỏ hơn cho di động */
+  }
+  .card-title {
+    font-size: 1rem; /* Giảm kích thước tiêu đề cho di động */
+  }
+  .card-text {
+    font-size: 0.85rem; /* Giảm kích thước văn bản cho di động */
+  }
+}
+
+/* Kiểu cho banner-section */
+.banner-section {
+  position: relative;
+  height: 400px;
+  background-image: url("https://d2hijos0r2m9rf.cloudfront.net/uploads/blog_image/blog_75.jpg");
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 4%;
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55); /* Lớp đen phủ mờ */
+  z-index: 1;
+}
+
+.banner-section .container {
+  position: relative;
+  z-index: 2; /* Để chữ nằm trên overlay */
+}
+
+/* Kiểu tùy chỉnh cho nút "Xem Thêm" và phân trang */
+.load-more-button {
+  padding: 10px 30px;
+  font-size: 1rem;
+}
+
+.pagination .page-item .page-link {
+  border-radius: 25px;
+  margin: 0 5px;
+}
