@@ -22,6 +22,7 @@ import Cart from "./pages/Cart/Cart";
 import Profile from "./pages/Profile/Profile";
 import ShopProducts from "./pages/ProductsShop/ShopProducts";
 import Register from "./pages/Register/Register";
+import ForgotPassword from "./pages/ForgotPassWord/Forgot-password";
 import AdminLayout from "./pages/Admin/AdminLayout";
 import DashboardHome from "./pages/Admin/DashboardHome";
 import ProductsManager from "./pages/Admin/ProductsManager";
@@ -29,10 +30,12 @@ import PostsManager from "./pages/Admin/PostsManager";
 import ShopProfile from "./pages/ShopProfile/ShopProfile";
 import Shop from "./pages/Shop/Shop";
 import ProductsShop from "./pages/ProductsInShop/ProductsShop";
+import OrderShop from "./pages/OrderShop/OrderShop";
+import UsersManagement from "./pages/Admin/UsersManagement";
+import ShopsManagement from "./pages/Admin/ShopsManagement";
 
 // Dummy shop pages
-const ShopDashboard = () => <div style={{ padding: 40 }}>Shop Dashboard</div>;
-const ShopOrders = () => <div style={{ padding: 40 }}>Shop Orders</div>;
+
 
 // RoleEnum mapping
 const RoleEnum = {
@@ -55,6 +58,7 @@ const AppContent = () => {
   const location = useLocation();
   const isLogin = location.pathname === "/login";
   const isRegister = location.pathname === "/register";
+  const isForgotPassword = location.pathname === "/forgot-password";
   const isProfile = location.pathname === "/settings";
   const role = getRole();
 
@@ -66,6 +70,8 @@ const AppContent = () => {
           <Route index element={<DashboardHome />} />
           <Route path="products" element={<ProductsManager />} />
           <Route path="posts" element={<PostsManager />} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="shops" element={<ShopsManagement />} />
         </Route>
       </Routes>
     );
@@ -76,9 +82,8 @@ const AppContent = () => {
     return (
       <ShopLayout>
         <Routes>
-          <Route path="/shop" element={<Navigate to="/shop/dashboard" replace />} />
-          <Route path="/shop/dashboard" element={<ShopDashboard />} />
-          <Route path="/shop/orders" element={<ShopOrders />} />
+          <Route path="/shop" element={<Navigate to="/shop/profile" replace />} />
+          <Route path="/shop/orders" element={<OrderShop />} />
           <Route path="/shop/products" element={<ShopProducts />} />
           <Route path="/shop/profile" element={<ShopProfile />} />
         </Routes>
@@ -89,11 +94,12 @@ const AppContent = () => {
   // Mặc định là User
   return (
     <div className="App">
-      {!isLogin && !isRegister && <Navbar />}
+      {!isLogin && !isRegister && !isForgotPassword && <Navbar />}
       <main>
         <Routes>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/"
             element={
@@ -166,14 +172,12 @@ const AppContent = () => {
           </Route>
         </Routes>
       </main>
-      {/* Không hiện Footer và ScrollToTop khi ở trang login hoặc register */}
-      {!isLogin && !isRegister && !isProfile && <Footer />}
-      {!isLogin && !isRegister && <ScrollToTop />}
-
+      {/* Không hiện Footer và ScrollToTop khi ở trang login, register hoặc forgot password */}
+      {!isLogin && !isRegister && !isForgotPassword && !isProfile && <Footer />}
+      {!isLogin && !isRegister && !isForgotPassword && <ScrollToTop />}
     </div>
   );
 };
-
 
 export default function AppWithRouter() {
   return (

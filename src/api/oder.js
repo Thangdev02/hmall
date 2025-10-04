@@ -53,7 +53,7 @@ export async function getOrderDetails(orderId, pageNumber = 1, pageSize = 9999, 
 }
 
 // Lấy danh sách đơn hàng của shop
-export async function getOrdersByShop({ pageNumber = 1, pageSize = 999, filter = "" }, token) {
+export async function getOrdersByShop({ pageNumber = 1, pageSize = "", filter = "" }, token) {
     const params = new URLSearchParams({
         pageNumber,
         pageSize,
@@ -95,6 +95,32 @@ export async function editOrderStatus(orderID, status, token) {
             Authorization: `Bearer ${token}`,
         },
         body: formData,
+    });
+
+    return await res.json();
+}
+// Tạo đơn hàng nhanh (fast order)
+export async function createFastOrder(data, token) {
+    const res = await fetch(`${BASE_URL}/api/v1/orders/fast-order`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    });
+
+    return await res.json();
+}
+// Hủy đơn hàng
+export async function cancelOrder(data, token) {
+    const res = await fetch(`${BASE_URL}/api/v1/orders/cancel-order`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
     });
 
     return await res.json();

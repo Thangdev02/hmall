@@ -1,6 +1,6 @@
 import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap"
 import { LinkContainer } from "react-router-bootstrap"
-import { House, Grid3x3Gap, Telephone, InfoCircle, Journal, Cart, PersonCircle, Gear } from "react-bootstrap-icons"
+import { House, Grid3x3Gap, Telephone, InfoCircle, Journal, Cart, PersonCircle, Gear, Shop } from "react-bootstrap-icons"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -50,7 +50,7 @@ const NavigationBar = () => {
             </LinkContainer>
             <LinkContainer to="/shop">
               <Nav.Link className="nav-link-custom">
-                <Grid3x3Gap className="me-1" />Cửa hàng
+                <Shop className="me-1" />Cửa hàng
               </Nav.Link>
             </LinkContainer>
 

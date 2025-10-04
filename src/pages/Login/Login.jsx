@@ -35,7 +35,7 @@ const Login = () => {
                 if (res.data.role === "Admin") {
                     navigate("/admin");
                 } else if (res.data.role === "Shop") {
-                    navigate("/shop/dashboard");
+                    navigate("/shop/profile");
                 } else {
                     navigate("/");
                 }
@@ -81,7 +81,13 @@ const Login = () => {
                         {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                     </button>
                 </form>
-                <a className="login-link" href="#">Quên mật khẩu?</a>
+                <a
+                    className="login-link"
+                    href="/forgot-password"
+                    style={{ color: "#4f8edc", fontWeight: 500, textDecoration: "underline", cursor: "pointer" }}
+                >
+                    Quên mật khẩu?
+                </a>
                 <div className="mt-3 text-center">
                     <span>Bạn chưa có tài khoản? </span>
                     <a

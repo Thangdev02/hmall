@@ -122,7 +122,40 @@
   font-size: 1rem;
 }
 
-.pagination .page-item .page-link {
-  border-radius: 25px;
-  margin: 0 5px;
+/* ...existing CSS... */
+
+/* ...existing CSS... */
+
+/* Pagination custom styles - using CSS variable */
+.pagination .page-link {
+    color: var(--secondary-blue) !important;
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    margin: 0 2px !important;
+    padding: 8px 12px !important;
+    font-weight: 500 !important;
+}
+
+.pagination .page-link:hover {
+    color: #ffffff !important;
+    background-color: var(--secondary-blue) !important;
+    border-color: var(--secondary-blue) !important;
+}
+
+.pagination .page-item.active .page-link {
+    color: #ffffff !important;
+    background-color: var(--secondary-blue) !important;
+    border-color: var(--secondary-blue) !important;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d !important;
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+}
+
+.pagination .page-link:focus {
+    box-shadow: 0 0 0 0.2rem rgba(132, 180, 200, 0.25) !important;
+    color: var(--secondary-blue) !important;
 }

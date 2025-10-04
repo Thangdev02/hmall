@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Form, Modal, Alert, Badge, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Modal, Alert, Badge, Spinner, Tab, Tabs } from 'react-bootstrap';
 import { PencilFill, StarFill, GeoAltFill, TelephoneFill, EnvelopeFill, CalendarFill } from 'react-bootstrap-icons';
 import { getShopByOwner, editShopInfo } from '../../api/shop';
 import { editProfile } from '../../api/auth';
+import BankManagement from '../../components/BankManagement/BankManagement';
+import OrderStatistics from '../../components/OrderStatistics/OrderStatistics';
 import './Shopprofile.css';
 
 const ShopProfile = () => {
@@ -16,6 +18,7 @@ const ShopProfile = () => {
     const [saving, setSaving] = useState(false);
     const [ownerSaving, setOwnerSaving] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [activeTab, setActiveTab] = useState('profile');
 
     const token = localStorage.getItem('token');
 
@@ -100,7 +103,6 @@ const ShopProfile = () => {
             setOwnerSaving(true);
             const response = await editProfile(ownerEditForm, token);
             if (response.statusCode === 200) {
-                // Cập nhật dữ liệu shop với thông tin owner mới
                 setShopData(prev => ({
                     ...prev,
                     ownerName: ownerEditForm.fullName,
@@ -193,122 +195,138 @@ const ShopProfile = () => {
                 </div>
             </div>
 
-            {/* Main Content */}
+            {/* Main Content with Tabs */}
             <Container className="mt-4">
-                <Row>
-                    <Col lg={8}>
-                        {/* Shop Information Card */}
-                        <Card className="shop-info-card mb-4">
-                            <Card.Header className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">Thông tin shop</h5>
-                                <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => setShowEditModal(true)}
-                                >
-                                    <PencilFill className="me-2" />
-                                    Chỉnh sửa
-                                </Button>
-                            </Card.Header>
-                            <Card.Body>
-                                <Row>
-                                    <Col md={6}>
-                                        <div className="info-item">
-                                            <strong>Tên shop:</strong>
-                                            <p>{shopData?.name}</p>
-                                        </div>
-                                        <div className="info-item">
-                                            <GeoAltFill className="info-icon" />
-                                            <strong>Địa chỉ:</strong>
-                                            <p>{shopData?.address}</p>
-                                        </div>
-                                        <div className="info-item">
-                                            <strong>Thành phố:</strong>
-                                            <p>{shopData?.city}, {shopData?.province}</p>
-                                        </div>
-                                    </Col>
-                                    <Col md={6}>
-                                        <div className="info-item">
-                                            <TelephoneFill className="info-icon" />
-                                            <strong>Số điện thoại:</strong>
-                                            <p>{shopData?.phone}</p>
-                                        </div>
-                                        <div className="info-item">
-                                            <EnvelopeFill className="info-icon" />
-                                            <strong>Email:</strong>
-                                            <p>{shopData?.email}</p>
-                                        </div>
-                                        <div className="info-item">
-                                            <CalendarFill className="info-icon" />
-                                            <strong>Ngày tạo:</strong>
-                                            <p>{formatDate(shopData?.createdDate)}</p>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            </Card.Body>
-                        </Card>
+                <Tabs
+                    activeKey={activeTab}
+                    onSelect={(k) => setActiveTab(k)}
+                    className="mb-4"
+                >
+                    <Tab eventKey="profile" title="Thông tin shop">
+                        <Row>
+                            <Col lg={8}>
+                                {/* Shop Information Card */}
+                                <Card className="shop-info-card mb-4">
+                                    <Card.Header className="d-flex justify-content-between align-items-center">
+                                        <h5 className="mb-0">Thông tin shop</h5>
+                                        <Button
+                                            variant="outline-primary"
+                                            size="sm"
+                                            onClick={() => setShowEditModal(true)}
+                                        >
+                                            <PencilFill className="me-2" />
+                                            Chỉnh sửa
+                                        </Button>
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <Row>
+                                            <Col md={6}>
+                                                <div className="info-item">
+                                                    <strong>Tên shop:</strong>
+                                                    <p>{shopData?.name}</p>
+                                                </div>
+                                                <div className="info-item">
+                                                    <GeoAltFill className="info-icon" />
+                                                    <strong>Địa chỉ:</strong>
+                                                    <p>{shopData?.address}</p>
+                                                </div>
+                                                <div className="info-item">
+                                                    <strong>Thành phố:</strong>
+                                                    <p>{shopData?.city}, {shopData?.province}</p>
+                                                </div>
+                                            </Col>
+                                            <Col md={6}>
+                                                <div className="info-item">
+                                                    <TelephoneFill className="info-icon" />
+                                                    <strong>Số điện thoại:</strong>
+                                                    <p>{shopData?.phone}</p>
+                                                </div>
+                                                <div className="info-item">
+                                                    <EnvelopeFill className="info-icon" />
+                                                    <strong>Email:</strong>
+                                                    <p>{shopData?.email}</p>
+                                                </div>
+                                                <div className="info-item">
+                                                    <CalendarFill className="info-icon" />
+                                                    <strong>Ngày tạo:</strong>
+                                                    <p>{formatDate(shopData?.createdDate)}</p>
+                                                </div>
+                                            </Col>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
 
-                        {/* Owner Information Card */}
-                        <Card className="owner-info-card">
-                            <Card.Header className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">Thông tin chủ shop</h5>
-                                <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => setShowOwnerEditModal(true)}
-                                >
-                                    <PencilFill className="me-2" />
-                                    Chỉnh sửa
-                                </Button>
-                            </Card.Header>
-                            <Card.Body>
-                                <Row>
-                                    <Col md={6}>
-                                        <div className="info-item">
-                                            <strong>Tên chủ shop:</strong>
-                                            <p>{shopData?.ownerName || 'Chưa cập nhật'}</p>
-                                        </div>
-                                    </Col>
-                                    <Col md={6}>
-                                        <div className="info-item">
-                                            <strong>Số điện thoại:</strong>
-                                            <p>{shopData?.ownerPhone}</p>
-                                        </div>
-                                    </Col>
-                                    <Col md={12}>
-                                        <div className="info-item">
-                                            <strong>Email:</strong>
-                                            <p>{shopData?.ownerEmail}</p>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            </Card.Body>
-                        </Card>
-                    </Col>
+                                {/* Owner Information Card */}
+                                <Card className="owner-info-card">
+                                    <Card.Header className="d-flex justify-content-between align-items-center">
+                                        <h5 className="mb-0">Thông tin chủ shop</h5>
+                                        <Button
+                                            variant="outline-primary"
+                                            size="sm"
+                                            onClick={() => setShowOwnerEditModal(true)}
+                                        >
+                                            <PencilFill className="me-2" />
+                                            Chỉnh sửa
+                                        </Button>
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <Row>
+                                            <Col md={6}>
+                                                <div className="info-item">
+                                                    <strong>Tên chủ shop:</strong>
+                                                    <p>{shopData?.ownerName || 'Chưa cập nhật'}</p>
+                                                </div>
+                                            </Col>
+                                            <Col md={6}>
+                                                <div className="info-item">
+                                                    <strong>Số điện thoại:</strong>
+                                                    <p>{shopData?.ownerPhone}</p>
+                                                </div>
+                                            </Col>
+                                            <Col md={12}>
+                                                <div className="info-item">
+                                                    <strong>Email:</strong>
+                                                    <p>{shopData?.ownerEmail}</p>
+                                                </div>
+                                            </Col>
+                                        </Row>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
 
-                    <Col lg={4}>
-                        {/* Quick Stats */}
-                        <Card className="stats-card mb-4">
-                            <Card.Header>
-                                <h5 className="mb-0">Thống kê nhanh</h5>
-                            </Card.Header>
-                            <Card.Body>
-                                <div className="stat-item">
-                                    <div className="stat-number">{shopData?.ratingAverage || 0}</div>
-                                    <div className="stat-label">Điểm đánh giá trung bình</div>
-                                </div>
-                                <div className="stat-item">
-                                    <div className="stat-number">0</div>
-                                    <div className="stat-label">Tổng số sản phẩm</div>
-                                </div>
-                                <div className="stat-item">
-                                    <div className="stat-number">0</div>
-                                    <div className="stat-label">Đơn hàng hoàn thành</div>
-                                </div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
+                            <Col lg={4}>
+                                {/* Quick Stats */}
+                                <Card className="stats-card mb-4">
+                                    <Card.Header>
+                                        <h5 className="mb-0">Thống kê nhanh</h5>
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <div className="stat-item">
+                                            <div className="stat-number">{shopData?.ratingAverage || 0}</div>
+                                            <div className="stat-label">Điểm đánh giá trung bình</div>
+                                        </div>
+                                        <div className="stat-item">
+                                            <div className="stat-number">0</div>
+                                            <div className="stat-label">Tổng số sản phẩm</div>
+                                        </div>
+                                        <div className="stat-item">
+                                            <div className="stat-number">0</div>
+                                            <div className="stat-label">Đơn hàng hoàn thành</div>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+                    </Tab>
+                    
+                    <Tab eventKey="statistics" title="Thống kê đơn hàng">
+                        <OrderStatistics />
+                    </Tab>
+                    
+                    <Tab eventKey="banks" title="Tài khoản ngân hàng">
+                        <BankManagement />
+                    </Tab>
+                </Tabs>
             </Container>
 
             {/* Edit Modal */}

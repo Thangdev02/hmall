@@ -1,0 +1,272 @@
+.order-statistics {
+    padding: 20px 0;
+    min-width: 100%;
+    overflow-x: auto;
+}
+
+/* Statistics Cards */
+.stat-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    min-height: 150px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: #333333;
+}
+
+.stat-card .card-body {
+    padding: 24px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-icon {
+    color: #666666;
+    margin-bottom: 16px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #333333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666666;
+    margin-bottom: 8px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Specific card styles - Trắng đen */
+.revenue-card {
+    background-color: #333333;
+    color: white;
+    border-color: #333333;
+}
+
+.revenue-card .stat-icon,
+.revenue-card .stat-value,
+.revenue-card .stat-label {
+    color: white;
+}
+
+.orders-card {
+    background-color: #ffffff;
+    color: #333333;
+    border: 2px solid #333333;
+}
+
+.orders-card .stat-icon,
+.orders-card .stat-value,
+.orders-card .stat-label {
+    color: #333333;
+}
+
+.paid-card {
+    background-color: #f8f9fa;
+    color: #333333;
+    border: 1px solid #dee2e6;
+}
+
+.paid-card .stat-icon,
+.paid-card .stat-value,
+.paid-card .stat-label {
+    color: #333333;
+}
+
+.completed-card {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #e0e0e0;
+}
+
+.completed-card .stat-icon,
+.completed-card .stat-value,
+.completed-card .stat-label {
+    color: #333333;
+}
+
+/* Chart Cards */
+.order-statistics .card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    background-color: #ffffff;
+}
+
+.order-statistics .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px 20px;
+}
+
+.order-statistics .card-header h5 {
+    color: #333333;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.order-statistics .card-body {
+    padding: 20px;
+    min-height: 300px;
+    background-color: #ffffff;
+}
+
+/* Badge styles */
+.order-statistics .badge {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.order-statistics .badge.bg-success {
+    background-color: #333333 !important;
+    color: white;
+}
+
+.order-statistics .badge.bg-danger {
+    background-color: #666666 !important;
+    color: white;
+}
+
+/* Fix responsive - giữ kích thước tối thiểu */
+.order-statistics .row {
+    margin: 0 -15px;
+}
+
+.order-statistics .col-md-3,
+.order-statistics .col-md-4,
+.order-statistics .col-md-8,
+.order-statistics .col-md-12 {
+    padding: 0 15px;
+    min-width: 250px;
+}
+
+/* Chart container */
+.order-statistics canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 250px;
+}
+
+/* Responsive - cải thiện */
+@media (max-width: 1200px) {
+    .order-statistics .col-md-3 {
+        min-width: 280px;
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    .order-statistics {
+        padding: 10px 0;
+    }
+    
+    .order-statistics .col-md-3,
+    .order-statistics .col-md-4,
+    .order-statistics .col-md-8 {
+        min-width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .stat-card .card-body {
+        padding: 16px;
+        min-height: 100px;
+    }
+    
+    .stat-value {
+        font-size: 1.4rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+    
+    .order-statistics .card-body {
+        padding: 15px;
+        min-height: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-icon {
+        margin-bottom: 12px;
+    }
+    
+    .order-statistics .card-body {
+        min-height: 200px;
+    }
+}
+
+/* Đảm bảo container không bị shrink */
+.order-statistics > .row {
+    flex-wrap: wrap;
+    min-width: 100%;
+}
+
+/* Animation - giữ nguyên */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Fix chart responsive */
+.order-statistics .chart-container {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+}
+
+/* Prevent text overflow */
+.order-statistics * {
+    box-sizing: border-box;
+}
+
+/* Small text styling */
+.order-statistics small {
+    color: #666666;
+    font-size: 0.8rem;
+}

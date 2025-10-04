@@ -5,13 +5,15 @@ import { Container, Modal, Form, Button, Toast, ToastContainer } from "react-boo
 import "./Cart.css";
 import { getCartItems, deleteCartItem, editCartItemQuantity } from "../../api/cart";
 import LoadingSpinner from "../../components/LoadingSpinner";
-import { createOrder } from "../../api/oder";
+import { createOrder, createQRPayment } from "../../api/oder";
 
 const Cart = () => {
     const [cartItems, setCartItems] = useState([]);
     const [totalAmounts, setTotalAmounts] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [qrUrl, setQrUrl] = useState("");
     const [checkoutForm, setCheckoutForm] = useState({
         receiverName: "",
         deliveryAddress: "",
@@ -91,26 +93,86 @@ const Cart = () => {
         };
 
         try {
-            const res = await createOrder(orderData, token);
-            if (res && res.statusCode === 200) {
-                setToastMessage("Đặt hàng thành công!");
-                setShowToast(true);
-                setShowCheckoutModal(false);
-                // Hiện toast xong mới reload cart
-                setTimeout(async () => {
-                    const cartRes = await getCartItems({}, token);
-                    const apiCart = cartRes?.data?.items?.[0];
-                    setCartItems(apiCart?.cartItems || []);
-                    setTotalAmounts(apiCart?.totalAmounts || 0);
-                }, 500);
+            // Bước 1: Tạo order trước
+            console.log("Creating order with data:", orderData);
+            const orderRes = await createOrder(orderData, token);
+            console.log("Full order response:", orderRes);
+
+            if (orderRes && orderRes.statusCode === 200) {
+                // Lấy orderID từ data array - theo response structure mới
+                const orderID = orderRes.data?.[0];
+                console.log("Extracted orderID:", orderID);
+
+                if (!orderID) {
+                    console.error("OrderID not found in response:", orderRes);
+                    setToastMessage("Không thể lấy ID đơn hàng!");
+                    setShowToast(true);
+                    return;
+                }
+
+                if (paymentMethod === "OnlineBanking") {
+                    // Delay để đảm bảo order đã được lưu vào database
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    // Bước 2: Tạo QR payment với orderID
+                    try {
+                        const qrData = {
+                            orderID: orderID
+                        };
+
+                        console.log("QR Data being sent:", qrData);
+                        const qrRes = await createQRPayment(qrData, token);
+                        console.log("QR Response:", qrRes);
+
+                        if (qrRes && qrRes.statusCode === 200) {
+                            setQrUrl(qrRes.data.qrUrl);
+                            setShowCheckoutModal(false);
+                            setShowQRModal(true);
+                        } else {
+                            setToastMessage(`Lỗi tạo QR: ${qrRes.message || "Không thể tạo mã QR"}`);
+                            setShowToast(true);
+                        }
+                    } catch (error) {
+                        console.error("QR creation error:", error);
+                        setToastMessage("Lỗi khi tạo mã QR thanh toán!");
+                        setShowToast(true);
+                    }
+                } else {
+                    // Thanh toán trực tiếp
+                    setToastMessage("Đặt hàng thành công!");
+                    setShowToast(true);
+                    setShowCheckoutModal(false);
+                    setTimeout(async () => {
+                        const cartRes = await getCartItems({}, token);
+                        const apiCart = cartRes?.data?.items?.[0];
+                        setCartItems(apiCart?.cartItems || []);
+                        setTotalAmounts(apiCart?.totalAmounts || 0);
+                    }, 500);
+                }
             } else {
-                setToastMessage(res.message || "Đặt hàng thất bại!");
+                setToastMessage(orderRes.message || "Đặt hàng thất bại!");
                 setShowToast(true);
             }
-        } catch {
+        } catch (error) {
+            console.error("Order creation error:", error);
             setToastMessage("Đặt hàng thất bại!");
             setShowToast(true);
         }
+    };
+
+    // Xử lý khi hoàn thành thanh toán QR
+    const handleQRPaymentComplete = async () => {
+        setShowQRModal(false);
+        setToastMessage("Đặt hàng và thanh toán thành công!");
+        setShowToast(true);
+
+        // Reload cart sau khi thanh toán thành công
+        setTimeout(async () => {
+            const cartRes = await getCartItems({}, token);
+            const apiCart = cartRes?.data?.items?.[0];
+            setCartItems(apiCart?.cartItems || []);
+            setTotalAmounts(apiCart?.totalAmounts || 0);
+        }, 500);
     };
 
     // Xử lý thay đổi form thanh toán
@@ -158,10 +220,6 @@ const Cart = () => {
                         <span>Tạm tính:</span>
                         <span>{totalAmounts.toLocaleString()}đ</span>
                     </div>
-                    {/* <div>
-                        <span>Giảm giá:</span>
-                        <span>0đ</span>
-                    </div> */}
                     <div className="cart-total-ui">
                         <span>Tổng cộng:</span>
                         <span>{totalAmounts.toLocaleString()}đ</span>
@@ -232,14 +290,47 @@ const Cart = () => {
                 </Modal.Footer>
             </Modal>
 
+            {/* Modal QR Payment */}
+            <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Thanh toán QR Code</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="text-center">
+                    <div className="mb-3">
+                        <h5>Quét mã QR để thanh toán</h5>
+                        <p>Số tiền: <strong>{totalAmounts.toLocaleString()}đ</strong></p>
+                    </div>
+                    {qrUrl && (
+                        <div className="mb-3">
+                            <img
+                                src={qrUrl}
+                                alt="QR Payment Code"
+                                style={{ maxWidth: "100%", height: "auto", border: "1px solid #ddd", borderRadius: "8px" }}
+                            />
+                        </div>
+                    )}
+                    <div className="text-muted">
+                        <small>Sau khi thanh toán thành công, vui lòng nhấn "Hoàn thành"</small>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowQRModal(false)}>
+                        Hủy
+                    </Button>
+                    <Button variant="success" onClick={handleQRPaymentComplete}>
+                        Hoàn thành
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             {/* Toast thông báo */}
             <ToastContainer position="top-end" className="p-3">
                 <Toast
                     onClose={() => setShowToast(false)}
                     show={showToast}
-                    delay={2000}
+                    delay={3000}
                     autohide
-                    bg={toastMessage.includes("thất bại") || toastMessage.includes("đăng nhập") || toastMessage.includes("điền đầy đủ") ? "danger" : "success"}
+                    bg={toastMessage.includes("thất bại") || toastMessage.includes("đăng nhập") || toastMessage.includes("điền đầy đủ") || toastMessage.includes("Lỗi") ? "danger" : "success"}
                 >
                     <Toast.Body className="text-white">{toastMessage}</Toast.Body>
                 </Toast>

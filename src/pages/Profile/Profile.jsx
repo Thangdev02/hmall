@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react";
-import { Container, Row, Col, Card, Button, Form, Alert, Nav, Image, Spinner, Table, Pagination } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Form, Alert, Nav, Image, Spinner, Table, Pagination, Modal, Badge } from "react-bootstrap";
 import { getUser, editProfile } from "../../api/auth";
 import { uploadMultipleFilesUser } from "../../api/upload";
+import { TrashFill, EyeFill } from "react-bootstrap-icons";
 
 import LoadingSpinner from "../../components/LoadingSpinner";
 import "./Profile.css";
-import { getOrdersByUser } from "../../api/oder";
+import { getOrdersByUser, cancelOrder } from "../../api/oder";
 
 const BASE_API_URL = "https://hmstoresapi.eposh.io.vn/";
 
@@ -27,7 +28,23 @@ const Profile = () => {
     const [ordersLoading, setOrdersLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+
+    // States for cancel order
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [cancelling, setCancelling] = useState(false);
+    const [cancelSuccess, setCancelSuccess] = useState("");
+    const [cancelError, setCancelError] = useState("");
+
     const fileInputRef = useRef();
+
+    // Order Status Configuration
+    const ORDER_STATUS = {
+        WaitForPayment: { label: 'Chờ thanh toán', variant: 'warning' },
+        Paid: { label: 'Đã thanh toán', variant: 'info' },
+        Cancelled: { label: 'Đã hủy', variant: 'danger' },
+        Completed: { label: 'Hoàn thành', variant: 'success' }
+    };
 
     useEffect(() => {
         async function fetchUser() {
@@ -49,7 +66,7 @@ const Profile = () => {
             if (tab === "orders") {
                 setOrdersLoading(true);
                 try {
-                    const res = await getOrdersByUser({ pageNumber: currentPage, pageSize: 3 }, token);
+                    const res = await getOrdersByUser({ pageNumber: currentPage, pageSize: 5 }, token);
                     if (res.statusCode === 200) {
                         setOrders(res.data.items || []);
                         setTotalPages(res.data.totalPages || 1);
@@ -66,6 +83,17 @@ const Profile = () => {
         }
         fetchOrders();
     }, [tab, token, currentPage]);
+
+    // Clear messages
+    useEffect(() => {
+        if (cancelSuccess || cancelError) {
+            const timer = setTimeout(() => {
+                setCancelSuccess("");
+                setCancelError("");
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [cancelSuccess, cancelError]);
 
     const handleAvatarChange = async (e) => {
         const file = e.target.files[0];
@@ -128,6 +156,61 @@ const Profile = () => {
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
+    };
+
+    // Handle cancel order
+    const handleShowCancelModal = (order) => {
+        setSelectedOrder(order);
+        setShowCancelModal(true);
+    };
+
+    const handleCancelOrder = async () => {
+        if (!selectedOrder) return;
+
+        try {
+            setCancelling(true);
+            const response = await cancelOrder({ orderID: selectedOrder.orderID }, token);
+
+            if (response.statusCode === 200) {
+                setCancelSuccess('Hủy đơn hàng thành công!');
+                setShowCancelModal(false);
+                // Refresh orders list
+                const res = await getOrdersByUser({ pageNumber: currentPage, pageSize: 5 }, token);
+                if (res.statusCode === 200) {
+                    setOrders(res.data.items || []);
+                }
+            } else {
+                setCancelError(response.message || 'Không thể hủy đơn hàng');
+            }
+        } catch (err) {
+            setCancelError('Đã có lỗi xảy ra khi hủy đơn hàng');
+            console.error('Error cancelling order:', err);
+        } finally {
+            setCancelling(false);
+        }
+    };
+
+    // Check if order can be cancelled
+    const canCancelOrder = (status) => {
+        return status === 'WaitForPayment' || status === 'Paid';
+    };
+
+    // Get status badge
+    const getStatusBadge = (status) => {
+        const statusConfig = ORDER_STATUS[status] || ORDER_STATUS.WaitForPayment;
+        return (
+            <Badge bg={statusConfig.variant}>
+                {statusConfig.label}
+            </Badge>
+        );
+    };
+
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(amount);
     };
 
     if (loading) return <LoadingSpinner />;
@@ -208,6 +291,7 @@ const Profile = () => {
                                     </Nav.Link>
                                 </Nav.Item>
                             </Nav>
+
                             {tab === "info" && (
                                 <>
                                     {success && <Alert variant="success">Cập nhật thành công!</Alert>}
@@ -303,6 +387,7 @@ const Profile = () => {
                                     </Form>
                                 </>
                             )}
+
                             {tab === "password" && (
                                 <>
                                     {pwSuccess && <Alert variant="success">Đổi mật khẩu thành công!</Alert>}
@@ -342,8 +427,12 @@ const Profile = () => {
                                     </Form>
                                 </>
                             )}
+
                             {tab === "orders" && (
                                 <>
+                                    {cancelSuccess && <Alert variant="success">{cancelSuccess}</Alert>}
+                                    {cancelError && <Alert variant="danger">{cancelError}</Alert>}
+
                                     {ordersLoading ? (
                                         <LoadingSpinner />
                                     ) : orders.length === 0 ? (
@@ -362,19 +451,34 @@ const Profile = () => {
                                                         <th>Người nhận</th>
                                                         <th>Số điện thoại</th>
                                                         <th>Phương thức thanh toán</th>
+                                                        <th>Thao tác</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {orders.map(order => (
                                                         <tr key={order.orderID}>
                                                             <td>{order.orderCode}</td>
-                                                            <td>{order.totalAmounts.toLocaleString()}đ</td>
-                                                            <td>{order.status === "WaitForPayment" ? "Chờ thanh toán" : order.status}</td>
+                                                            <td>{formatCurrency(order.totalAmounts)}</td>
+                                                            <td>{getStatusBadge(order.status)}</td>
                                                             <td>{new Date(order.createdDate).toLocaleString("vi-VN")}</td>
                                                             <td>{order.deliveryAddress}</td>
                                                             <td>{order.receiverName}</td>
                                                             <td>{order.receiverPhone}</td>
                                                             <td>{order.paymentMethod === "Direct" ? "Trực tiếp" : "Thanh toán online"}</td>
+                                                            <td>
+                                                                <div className="d-flex gap-1">
+                                                                    {canCancelOrder(order.status) && (
+                                                                        <Button
+                                                                            variant="outline-danger"
+                                                                            size="sm"
+                                                                            onClick={() => handleShowCancelModal(order)}
+                                                                            title="Hủy đơn hàng"
+                                                                        >
+                                                                            <TrashFill size={12} />
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -397,6 +501,59 @@ const Profile = () => {
                         </div>
                     </Col>
                 </Row>
+
+                {/* Cancel Order Modal */}
+                <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title className="text-danger">
+                            <TrashFill className="me-2" />
+                            Hủy đơn hàng
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {selectedOrder && (
+                            <>
+                                <Alert variant="warning">
+                                    <strong>Cảnh báo!</strong> Bạn có chắc chắn muốn hủy đơn hàng này không?
+                                </Alert>
+                                <div className="mb-2">
+                                    <strong>Mã đơn hàng:</strong> {selectedOrder.orderCode}
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Tổng tiền:</strong> {formatCurrency(selectedOrder.totalAmounts)}
+                                </div>
+                                <div className="mb-2">
+                                    <strong>Trạng thái hiện tại:</strong> {getStatusBadge(selectedOrder.status)}
+                                </div>
+                                <div className="text-danger">
+                                    <small>* Hành động này không thể hoàn tác</small>
+                                </div>
+                            </>
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowCancelModal(false)}>
+                            Không, giữ lại
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={handleCancelOrder}
+                            disabled={cancelling}
+                        >
+                            {cancelling ? (
+                                <>
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Đang hủy...
+                                </>
+                            ) : (
+                                <>
+                                    <TrashFill className="me-2" />
+                                    Có, hủy đơn hàng
+                                </>
+                            )}
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
         </div>
     );

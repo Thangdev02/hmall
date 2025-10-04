@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { Container, Navbar } from "react-bootstrap";
-import { House, Box, FileText, BoxArrowRight } from "react-bootstrap-icons";
+import { House, Box, FileText, BoxArrowRight, People, Shop } from "react-bootstrap-icons";
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -49,6 +49,18 @@ export default function AdminLayout() {
           className="mb-3 text-white text-decoration-none d-flex align-items-center"
         >
           <FileText className="me-2" /> {!collapsed && "Posts"}
+        </NavLink>
+        <NavLink
+          to="/admin/users"
+          className="mb-3 text-white text-decoration-none d-flex align-items-center"
+        >
+          <People className="me-2" /> {!collapsed && "Users"}
+        </NavLink>
+        <NavLink
+          to="/admin/shops"
+          className="mb-3 text-white text-decoration-none d-flex align-items-center"
+        >
+          <Shop className="me-2" /> {!collapsed && "Shops"}
         </NavLink>
 
         <button

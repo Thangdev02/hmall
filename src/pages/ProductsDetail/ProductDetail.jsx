@@ -1,13 +1,15 @@
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { Container, Row, Col, Button, Badge, Card, Form, Modal, Toast, ToastContainer } from "react-bootstrap"
 import { motion } from "framer-motion"
-import { Star, Heart } from "react-bootstrap-icons"
+import { Star, Heart, ChatText } from "react-bootstrap-icons"
 import { useState, useEffect } from "react"
 import { getProductDetail } from "../../api/product"
 import { addItemToCart } from "../../api/cart"
+import { createFastOrder, createQRPayment } from "../../api/oder"
 import ReactQuill from "react-quill"
 import "react-quill/dist/quill.snow.css"
 import LoadingSpinner from "../../components/LoadingSpinner"
+import ProductFeedback from "../../components/ProductFeedback/ProductFeedback"
 import "./ProductDetail.css"
 
 const ProductDetail = () => {
@@ -17,13 +19,27 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
   const [selectedImage, setSelectedImage] = useState("")
-  const [reviews, setReviews] = useState([])
-  const [showModal, setShowModal] = useState(false)
-  const [newReview, setNewReview] = useState({ user: "", rating: 5, comment: "" })
   const [isLiked, setIsLiked] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
   const [cartQuantity, setCartQuantity] = useState(1)
+
+  // State cho feedback modal
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+
+  // State cho modal mua ngay
+  const [showBuyNowModal, setShowBuyNowModal] = useState(false)
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [qrUrl, setQrUrl] = useState("")
+  const [buyNowForm, setBuyNowForm] = useState({
+    receiverName: "",
+    deliveryAddress: "",
+    receiverPhone: "",
+    paymentMethod: "Direct",
+    note: ""
+  })
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false)
+
   const token = localStorage.getItem("token")
 
   useEffect(() => {
@@ -42,7 +58,6 @@ const ProductDetail = () => {
         ].filter(Boolean)
         setSelectedImage(allImages[0] || "")
         setProduct(prev => ({ ...prev, allImages }))
-        setReviews([])
       })
       .catch(error => {
         if (error.response?.status === 404 || error.message === "Product not found") {
@@ -71,14 +86,6 @@ const ProductDetail = () => {
         </div>
       </Container>
     )
-  }
-
-  const handleSubmitReview = () => {
-    if (!newReview.user || !newReview.comment) return
-    const today = new Date().toLocaleDateString("vi-VN")
-    setReviews([...reviews, { ...newReview, date: today }])
-    setNewReview({ user: "", rating: 5, comment: "" })
-    setShowModal(false)
   }
 
   const handleLikeToggle = () => {
@@ -121,6 +128,146 @@ const ProductDetail = () => {
       setToastMessage("Thêm vào giỏ hàng thất bại!")
       setShowToast(true)
     }
+  }
+
+  // Xử lý mở modal mua ngay
+  const handleBuyNow = () => {
+    if (!product.isActive) {
+      setToastMessage("Sản phẩm đã hết hàng!")
+      setShowToast(true)
+      return
+    }
+
+    if (cartQuantity > product.stock) {
+      setToastMessage(`Chỉ còn ${product.stock} sản phẩm trong kho!`)
+      setShowToast(true)
+      return
+    }
+
+    if (!token) {
+      setToastMessage("Vui lòng đăng nhập để mua hàng!")
+      setShowToast(true)
+      return
+    }
+
+    setBuyNowForm({
+      receiverName: "",
+      deliveryAddress: "",
+      receiverPhone: "",
+      paymentMethod: "Direct",
+      note: ""
+    })
+    setShowBuyNowModal(true)
+  }
+
+  // Xử lý thay đổi form mua ngay
+  const handleBuyNowFormChange = (e) => {
+    const { name, value } = e.target
+    setBuyNowForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  // Xử lý submit mua ngay
+  const handleBuyNowSubmit = async () => {
+    const { receiverName, deliveryAddress, receiverPhone, paymentMethod, note } = buyNowForm
+
+    if (!receiverName || !deliveryAddress || !receiverPhone) {
+      setToastMessage("Vui lòng điền đầy đủ thông tin!")
+      setShowToast(true)
+      return
+    }
+
+    setIsSubmittingOrder(true)
+
+    try {
+      const orderData = {
+        receiverName,
+        deliveryAddress,
+        receiverPhone,
+        paymentMethod,
+        productID: product.id,
+        quantity: cartQuantity,
+        note
+      }
+
+      console.log("Creating fast order with data:", orderData)
+      const orderRes = await createFastOrder(orderData, token)
+      console.log("Fast order response:", orderRes)
+
+      if (orderRes && orderRes.statusCode === 200) {
+        // Lấy orderID trực tiếp từ data (là string UUID)
+        const orderID = orderRes.data
+        console.log("Extracted orderID:", orderID)
+
+        if (!orderID) {
+          console.error("OrderID not found in response:", orderRes)
+          setToastMessage("Không thể lấy ID đơn hàng!")
+          setShowToast(true)
+          return
+        }
+
+        if (paymentMethod === "OnlineBanking") {
+          // Delay để đảm bảo order đã được lưu vào database
+          await new Promise(resolve => setTimeout(resolve, 1000))
+
+          // Tạo QR payment với orderID
+          try {
+            const qrData = {
+              orderID: orderID // orderID là string UUID
+            }
+
+            console.log("QR Data being sent:", qrData)
+            const qrRes = await createQRPayment(qrData, token)
+            console.log("QR Response:", qrRes)
+
+            if (qrRes && qrRes.statusCode === 200) {
+              setQrUrl(qrRes.data.qrUrl)
+              setShowBuyNowModal(false)
+              setShowQRModal(true)
+            } else {
+              setToastMessage(`Lỗi tạo QR: ${qrRes.message || "Không thể tạo mã QR"}`)
+              setShowToast(true)
+            }
+          } catch (error) {
+            console.error("QR creation error:", error)
+            setToastMessage("Lỗi khi tạo mã QR thanh toán!")
+            setShowToast(true)
+          }
+        } else {
+          // Thanh toán trực tiếp
+          setToastMessage("Đặt hàng thành công!")
+          setShowToast(true)
+          setShowBuyNowModal(false)
+          setCartQuantity(1)
+
+          // Chuyển đến trang đơn hàng sau 2 giây
+          setTimeout(() => {
+
+          }, 2000)
+        }
+      } else {
+        setToastMessage(orderRes.message || "Đặt hàng thất bại!")
+        setShowToast(true)
+      }
+    } catch (error) {
+      console.error("Order creation error:", error)
+      setToastMessage("Đặt hàng thất bại!")
+      setShowToast(true)
+    } finally {
+      setIsSubmittingOrder(false)
+    }
+  }
+
+  // Xử lý khi hoàn thành thanh toán QR
+  const handleQRPaymentComplete = async () => {
+    setShowQRModal(false)
+    setToastMessage("Đặt hàng và thanh toán thành công!")
+    setShowToast(true)
+    setCartQuantity(1)
+
+    // Chuyển đến trang đơn hàng sau 2 giây
+    setTimeout(() => {
+      navigate('/orders')
+    }, 2000)
   }
 
   return (
@@ -190,7 +337,9 @@ const ProductDetail = () => {
               <ul className="text-muted">
                 <li>Chất liệu: {product.material}</li>
                 <li>Danh mục: {product.category}</li>
+                <li>Còn lại: {product.stock} sản phẩm</li>
               </ul>
+
               {/* Quantity Control */}
               <div className="quantity-control mb-4">
                 <span className="me-3 fw-bold">Số lượng:</span>
@@ -223,9 +372,15 @@ const ProductDetail = () => {
                   +
                 </Button>
               </div>
+
               {/* Action Buttons */}
-              <div className="d-flex gap-3 mt-4 align-items-center">
-                <Button size="lg" className="btn-primary-custom" disabled={!product.isActive}>
+              <div className="d-flex gap-3 mt-4 align-items-center flex-wrap">
+                <Button
+                  size="lg"
+                  className="btn-primary-custom"
+                  disabled={!product.isActive}
+                  onClick={handleBuyNow}
+                >
                   Mua Ngay
                 </Button>
                 <Button size="lg" variant="outline-secondary" onClick={handleAddToCart} disabled={!product.isActive}>
@@ -244,117 +399,168 @@ const ProductDetail = () => {
                   />
                 </Button>
               </div>
+
+              {/* Button đánh giá */}
+              <div className="mt-3">
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setShowFeedbackModal(true)}
+                  className="w-100"
+                >
+                  <ChatText className="me-2" size={16} />
+                  Xem đánh giá sản phẩm
+                </Button>
+              </div>
             </motion.div>
           </Col>
         </Row>
-
-        {/* Đánh giá sản phẩm */}
-        <section className="mt-5">
-          <h4 className="fw-bold mb-4">Đánh giá sản phẩm</h4>
-          {reviews.length > 0 ? (
-            <Row>
-              {reviews.map((review, idx) => (
-                <Col lg={3} md={6} sm={12} key={idx} className="mb-4">
-                  <Card className="h-100 shadow-sm review-card">
-                    <Card.Body>
-                      <div className="review-header">
-                        <div className="review-user">
-                          <div className="review-avatar">{review.user.charAt(0).toUpperCase()}</div>
-                          <h6 className="fw-bold mb-0">{review.user}</h6>
-                        </div>
-                        <small className="text-muted">{review.date}</small>
-                      </div>
-                      <div className="review-rating">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            size={16}
-                            fill={i < review.rating ? "#ffc107" : "lightgray"}
-                            color={i < review.rating ? "#ffc107" : "lightgray"}
-                          />
-                        ))}
-                        <span>{review.rating}/5</span>
-                      </div>
-                      <div className="review-comment" dangerouslySetInnerHTML={{ __html: review.comment }} />
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          ) : (
-            <p className="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
-          )}
-
-          <div className="text-center mt-3">
-            <Button variant="outline-primary" onClick={() => setShowModal(true)}>
-              Viết đánh giá
-            </Button>
-          </div>
-        </section>
-
-        {/* Modal đánh giá */}
-        <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>Viết đánh giá</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label>Tên của bạn</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Nhập tên"
-                  value={newReview.user}
-                  onChange={(e) => setNewReview({ ...newReview, user: e.target.value })}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Đánh giá</Form.Label>
-                <Form.Select
-                  value={newReview.rating}
-                  onChange={(e) => setNewReview({ ...newReview, rating: parseInt(e.target.value) })}
-                >
-                  <option value="5">⭐️⭐️⭐️⭐️⭐️ - Rất tốt</option>
-                  <option value="4">⭐️⭐️⭐️⭐️ - Tốt</option>
-                  <option value="3">⭐️⭐️⭐️ - Bình thường</option>
-                  <option value="2">⭐️⭐️ - Tệ</option>
-                  <option value="1">⭐️ - Rất tệ</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Nhận xét</Form.Label>
-                <ReactQuill
-                  value={newReview.comment}
-                  onChange={(value) => setNewReview({ ...newReview, comment: value })}
-                  placeholder="Chia sẻ trải nghiệm của bạn..."
-                  theme="snow"
-                  style={{ height: "150px", marginBottom: "40px" }}
-                />
-              </Form.Group>
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Hủy
-            </Button>
-            <Button variant="primary" onClick={handleSubmitReview}>
-              Gửi đánh giá
-            </Button>
-          </Modal.Footer>
-        </Modal>
 
         <ToastContainer position="top-end" className="p-3">
           <Toast
             onClose={() => setShowToast(false)}
             show={showToast}
-            delay={2000}
+            delay={3000}
             autohide
-            bg={toastMessage.includes("thất bại") || toastMessage.includes("đăng nhập") || toastMessage.includes("hết hàng") ? "danger" : "success"}
+            bg={toastMessage.includes("thất bại") || toastMessage.includes("đăng nhập") || toastMessage.includes("hết hàng") || toastMessage.includes("Lỗi") ? "danger" : "success"}
           >
             <Toast.Body className="text-white">{toastMessage}</Toast.Body>
           </Toast>
         </ToastContainer>
       </Container>
+
+      {/* Modal đánh giá sản phẩm */}
+      <ProductFeedback
+        productID={product?.id}
+        show={showFeedbackModal}
+        onHide={() => setShowFeedbackModal(false)}
+      />
+
+      {/* Modal mua ngay */}
+      <Modal show={showBuyNowModal} onHide={() => setShowBuyNowModal(false)} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Thông tin đặt hàng</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {/* Thông tin sản phẩm */}
+          <div className="mb-4 p-3 border rounded bg-light">
+            <div className="d-flex align-items-center">
+              <img
+                src={selectedImage}
+                alt={product.name}
+                style={{ width: 60, height: 60, objectFit: "cover" }}
+                className="rounded me-3"
+              />
+              <div>
+                <h6 className="mb-1">{product.name}</h6>
+                <p className="mb-1 text-muted">Số lượng: {cartQuantity}</p>
+                <p className="mb-0 fw-bold text-primary">
+                  Tổng tiền: {(product.price * cartQuantity).toLocaleString("vi-VN")}đ
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Tên người nhận *</Form.Label>
+              <Form.Control
+                type="text"
+                name="receiverName"
+                value={buyNowForm.receiverName}
+                onChange={handleBuyNowFormChange}
+                placeholder="Nhập tên người nhận"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Địa chỉ giao hàng *</Form.Label>
+              <Form.Control
+                type="text"
+                name="deliveryAddress"
+                value={buyNowForm.deliveryAddress}
+                onChange={handleBuyNowFormChange}
+                placeholder="Nhập địa chỉ giao hàng"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Số điện thoại *</Form.Label>
+              <Form.Control
+                type="text"
+                name="receiverPhone"
+                value={buyNowForm.receiverPhone}
+                onChange={handleBuyNowFormChange}
+                placeholder="Nhập số điện thoại"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Phương thức thanh toán</Form.Label>
+              <Form.Select
+                name="paymentMethod"
+                value={buyNowForm.paymentMethod}
+                onChange={handleBuyNowFormChange}
+              >
+                <option value="Direct">Thanh toán khi nhận hàng</option>
+                <option value="OnlineBanking">Thanh toán online</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Ghi chú</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                name="note"
+                value={buyNowForm.note}
+                onChange={handleBuyNowFormChange}
+                placeholder="Ghi chú cho đơn hàng (không bắt buộc)"
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowBuyNowModal(false)}>
+            Hủy
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleBuyNowSubmit}
+            disabled={isSubmittingOrder}
+          >
+            {isSubmittingOrder ? "Đang xử lý..." : "Đặt hàng"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal QR Payment cho mua ngay */}
+      <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Thanh toán QR Code</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          <div className="mb-3">
+            <h5>Quét mã QR để thanh toán</h5>
+            <p>Số tiền: <strong>{(product.price * cartQuantity).toLocaleString("vi-VN")}đ</strong></p>
+          </div>
+          {qrUrl && (
+            <div className="mb-3">
+              <img
+                src={qrUrl}
+                alt="QR Payment Code"
+                style={{ maxWidth: "100%", height: "auto", border: "1px solid #ddd", borderRadius: "8px" }}
+              />
+            </div>
+          )}
+          <div className="text-muted">
+            <small>Sau khi thanh toán thành công, vui lòng nhấn "Hoàn thành"</small>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowQRModal(false)}>
+            Hủy
+          </Button>
+          <Button variant="success" onClick={handleQRPaymentComplete}>
+            Hoàn thành
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }

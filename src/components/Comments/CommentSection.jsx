@@ -3,7 +3,6 @@ import { Button, Spinner } from "react-bootstrap";
 import { ChatDots } from "react-bootstrap-icons";
 import CommentItem from "./CommentItem";
 
-
 const CommentSection = ({
     comments,
     commentsLoading,
@@ -17,7 +16,9 @@ const CommentSection = ({
     setReplyContent,
     formatRelativeTime,
     quillModules,
-    quillFormats
+    quillFormats,
+    currentUserID,
+    isAuthenticated
 }) => {
     return (
         <div className="mt-5">
@@ -45,6 +46,8 @@ const CommentSection = ({
                             formatRelativeTime={formatRelativeTime}
                             quillModules={quillModules}
                             quillFormats={quillFormats}
+                            currentUserID={currentUserID}
+                            isAuthenticated={isAuthenticated} // Đảm bảo truyền prop này
                         />
                     ))}
                 </div>

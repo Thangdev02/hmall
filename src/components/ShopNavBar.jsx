@@ -63,7 +63,7 @@ const ShopNavBar = () => {
                 <Link to="/shop/dashboard" style={styles.logo}>Shop HMall</Link>
             </div>
             <ul style={styles.links}>
-                <li><Link to="/shop/dashboard" style={styles.link}>Dashboard</Link></li>
+
                 <li><Link to="/shop/orders" style={styles.link}>Đơn hàng</Link></li>
                 <li><Link to="/shop/products" style={styles.link}>Sản phẩm</Link></li>
                 <li><Link to="/shop/profile" style={styles.link}>Tài khoản</Link></li>

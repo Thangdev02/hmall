@@ -4,8 +4,11 @@ import { Container, Row, Col, Card, Button, Spinner, Alert } from "react-bootstr
 import { motion } from "framer-motion";
 import { Calendar, Person, Clock, ArrowLeft, Heart, HeartFill, ChatDots } from "react-bootstrap-icons";
 import { getBlogDetail, getBlogs, createComment, getComments, editComment, deleteComment, createReply, likeBlog, checkLikeStatus } from "../../api/blog";
+import { getUser } from "../../api/auth";
 import CommentSection from "../../components/Comments/CommentSection";
 import CommentForm from "../../components/Comments/CommentForm";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const BlogDetail = () => {
   const { id } = useParams();
@@ -23,6 +26,11 @@ const BlogDetail = () => {
   const [isLiking, setIsLiking] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeChecked, setLikeChecked] = useState(false);
+
+  // Thêm state cho user authentication
+  const [currentUserID, setCurrentUserID] = useState(null);
+  // eslint-disable-next-line no-unused-vars
+  const [currentUser, setCurrentUser] = useState(null);
 
   // React Quill modules and formats
   const quillModules = {
@@ -47,6 +55,41 @@ const BlogDetail = () => {
     const token = localStorage.getItem('token');
     return !!token;
   };
+
+  // Function để lấy thông tin user hiện tại
+  const getCurrentUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCurrentUserID(null);
+      setCurrentUser(null);
+      return;
+    }
+
+    try {
+      const res = await getUser(token);
+      if (res && res.statusCode === 200) {
+        const userData = res.data;
+        setCurrentUser(userData);
+        // Thử các field khác nhau có thể chứa user ID
+        const userId = userData.id || userData.userID || userData.userId || userData.ID;
+        setCurrentUserID(userId);
+        console.log('Current user data:', userData);
+        console.log('Current user ID:', userId);
+      } else {
+        setCurrentUserID(null);
+        setCurrentUser(null);
+      }
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      setCurrentUserID(null);
+      setCurrentUser(null);
+    }
+  };
+
+  // useEffect để lấy thông tin user khi component mount
+  useEffect(() => {
+    getCurrentUser();
+  }, []);
 
   // Check like status from localStorage or API
   const checkUserLikeStatus = async () => {
@@ -172,6 +215,23 @@ const BlogDetail = () => {
     const wordCount = content ? content.split(' ').length : 0;
     const minutes = Math.ceil(wordCount / wordsPerMinute);
     return minutes < 1 ? '1 phút đọc' : `${minutes} phút đọc`;
+  };
+
+  // Sanitize and format blog content
+  const formatBlogContent = (content) => {
+    if (!content) return 'Nội dung bài viết đang được cập nhật...';
+
+    // Nếu content đã có HTML tags, render trực tiếp
+    if (content.includes('<') && content.includes('>')) {
+      return content;
+    }
+
+    // Nếu là plain text, format thành HTML với line breaks
+    return content
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => line.trim())
+      .join('<br /><br />');
   };
 
   // Refresh comments and blog data
@@ -537,7 +597,7 @@ const BlogDetail = () => {
                 }}
               />
 
-              {/* Content */}
+              {/* Content - Sử dụng dangerouslySetInnerHTML để render HTML */}
               <div
                 className="blog-content"
                 style={{
@@ -546,17 +606,10 @@ const BlogDetail = () => {
                   color: "#34495e",
                   padding: "2rem"
                 }}
-              >
-                {blog.content ? blog.content.split("\n").map((para, idx) => (
-                  para.trim() && (
-                    <p key={idx} className="mb-3">
-                      {para.trim()}
-                    </p>
-                  )
-                )) : (
-                  <p>Nội dung bài viết đang được cập nhật...</p>
-                )}
-              </div>
+                dangerouslySetInnerHTML={{
+                  __html: formatBlogContent(blog.content)
+                }}
+              />
 
               {/* Like Button Only */}
               <div className="d-flex justify-content-center mt-4 mb-4">
@@ -605,6 +658,8 @@ const BlogDetail = () => {
                 formatRelativeTime={formatRelativeTime}
                 quillModules={quillModules}
                 quillFormats={quillFormats}
+                currentUserID={currentUserID}
+                isAuthenticated={isAuthenticated}
               />
 
               {/* Updated/Published Info */}
