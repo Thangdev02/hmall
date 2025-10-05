@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Modal, Form, Button, Toast, ToastContainer } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import "./Cart.css";
 import { getCartItems, deleteCartItem, editCartItemQuantity } from "../../api/cart";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { createOrder, createQRPayment } from "../../api/oder";
 
 const Cart = () => {
+    const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [totalAmounts, setTotalAmounts] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
-    const [qrUrl, setQrUrl] = useState("");
     const [checkoutForm, setCheckoutForm] = useState({
         receiverName: "",
         deliveryAddress: "",
@@ -93,13 +93,11 @@ const Cart = () => {
         };
 
         try {
-            // Bước 1: Tạo order trước
             console.log("Creating order with data:", orderData);
             const orderRes = await createOrder(orderData, token);
             console.log("Full order response:", orderRes);
 
             if (orderRes && orderRes.statusCode === 200) {
-                // Lấy orderID từ data array - theo response structure mới
                 const orderID = orderRes.data?.[0];
                 console.log("Extracted orderID:", orderID);
 
@@ -111,23 +109,24 @@ const Cart = () => {
                 }
 
                 if (paymentMethod === "OnlineBanking") {
-                    // Delay để đảm bảo order đã được lưu vào database
+                    // Thanh toán online - tạo QR nhưng chuyển luôn đến Profile
                     await new Promise(resolve => setTimeout(resolve, 1000));
 
-                    // Bước 2: Tạo QR payment với orderID
                     try {
-                        const qrData = {
-                            orderID: orderID
-                        };
-
+                        const qrData = { orderID: orderID };
                         console.log("QR Data being sent:", qrData);
                         const qrRes = await createQRPayment(qrData, token);
                         console.log("QR Response:", qrRes);
 
                         if (qrRes && qrRes.statusCode === 200) {
-                            setQrUrl(qrRes.data.qrUrl);
+                            // Tạo QR thành công - chuyển luôn đến Profile
+                            setToastMessage("Đặt hàng thành công!");
+                            setShowToast(true);
                             setShowCheckoutModal(false);
-                            setShowQRModal(true);
+
+                            setTimeout(() => {
+                                navigate('/settings?tab=orders');
+                            }, 1500);
                         } else {
                             setToastMessage(`Lỗi tạo QR: ${qrRes.message || "Không thể tạo mã QR"}`);
                             setShowToast(true);
@@ -138,16 +137,14 @@ const Cart = () => {
                         setShowToast(true);
                     }
                 } else {
-                    // Thanh toán trực tiếp
+                    // Thanh toán trực tiếp - chuyển luôn đến Profile
                     setToastMessage("Đặt hàng thành công!");
                     setShowToast(true);
                     setShowCheckoutModal(false);
-                    setTimeout(async () => {
-                        const cartRes = await getCartItems({}, token);
-                        const apiCart = cartRes?.data?.items?.[0];
-                        setCartItems(apiCart?.cartItems || []);
-                        setTotalAmounts(apiCart?.totalAmounts || 0);
-                    }, 500);
+
+                    setTimeout(() => {
+                        navigate('/settings?tab=orders');
+                    }, 1500);
                 }
             } else {
                 setToastMessage(orderRes.message || "Đặt hàng thất bại!");
@@ -158,21 +155,6 @@ const Cart = () => {
             setToastMessage("Đặt hàng thất bại!");
             setShowToast(true);
         }
-    };
-
-    // Xử lý khi hoàn thành thanh toán QR
-    const handleQRPaymentComplete = async () => {
-        setShowQRModal(false);
-        setToastMessage("Đặt hàng và thanh toán thành công!");
-        setShowToast(true);
-
-        // Reload cart sau khi thanh toán thành công
-        setTimeout(async () => {
-            const cartRes = await getCartItems({}, token);
-            const apiCart = cartRes?.data?.items?.[0];
-            setCartItems(apiCart?.cartItems || []);
-            setTotalAmounts(apiCart?.totalAmounts || 0);
-        }, 500);
     };
 
     // Xử lý thay đổi form thanh toán
@@ -286,39 +268,6 @@ const Cart = () => {
                     </Button>
                     <Button variant="primary" onClick={handleCheckoutSubmit}>
                         Xác nhận
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
-            {/* Modal QR Payment */}
-            <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Thanh toán QR Code</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="text-center">
-                    <div className="mb-3">
-                        <h5>Quét mã QR để thanh toán</h5>
-                        <p>Số tiền: <strong>{totalAmounts.toLocaleString()}đ</strong></p>
-                    </div>
-                    {qrUrl && (
-                        <div className="mb-3">
-                            <img
-                                src={qrUrl}
-                                alt="QR Payment Code"
-                                style={{ maxWidth: "100%", height: "auto", border: "1px solid #ddd", borderRadius: "8px" }}
-                            />
-                        </div>
-                    )}
-                    <div className="text-muted">
-                        <small>Sau khi thanh toán thành công, vui lòng nhấn "Hoàn thành"</small>
-                    </div>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowQRModal(false)}>
-                        Hủy
-                    </Button>
-                    <Button variant="success" onClick={handleQRPaymentComplete}>
-                        Hoàn thành
                     </Button>
                 </Modal.Footer>
             </Modal>

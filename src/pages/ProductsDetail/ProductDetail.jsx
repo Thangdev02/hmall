@@ -1,9 +1,10 @@
+/* eslint-disable no-undef */
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { Container, Row, Col, Button, Badge, Card, Form, Modal, Toast, ToastContainer } from "react-bootstrap"
 import { motion } from "framer-motion"
-import { Star, Heart, ChatText } from "react-bootstrap-icons"
+import { Star, Heart, HeartFill, ChatText } from "react-bootstrap-icons"
 import { useState, useEffect } from "react"
-import { getProductDetail } from "../../api/product"
+import { getProductDetail, favoriteProduct } from "../../api/product"
 import { addItemToCart } from "../../api/cart"
 import { createFastOrder, createQRPayment } from "../../api/oder"
 import ReactQuill from "react-quill"
@@ -20,6 +21,7 @@ const ProductDetail = () => {
   const [errorMessage, setErrorMessage] = useState(null)
   const [selectedImage, setSelectedImage] = useState("")
   const [isLiked, setIsLiked] = useState(false)
+  const [favoriteLoading, setFavoriteLoading] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
   const [cartQuantity, setCartQuantity] = useState(1)
@@ -42,9 +44,61 @@ const ProductDetail = () => {
 
   const token = localStorage.getItem("token")
 
+  // Utility functions cho localStorage với error handling tốt hơn
+  const FAVORITES_KEY = 'userFavorites'
+
+  const getFavoriteStatus = (productId) => {
+    if (!token || !productId) return false
+    try {
+      const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
+      const userFavorites = allFavorites[token] || {}
+      return Boolean(userFavorites[productId])
+    } catch (error) {
+      console.error('Error reading favorites from localStorage:', error)
+      return false
+    }
+  }
+
+  const setFavoriteStatus = (productId, status) => {
+    if (!token || !productId) return
+    try {
+      // Lấy tất cả favorites
+      const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
+
+      // Đảm bảo có object cho user hiện tại
+      if (!allFavorites[token]) {
+        allFavorites[token] = {}
+      }
+
+      // Cập nhật trạng thái
+      if (status) {
+        allFavorites[token][productId] = true
+      } else {
+        delete allFavorites[token][productId]
+      }
+
+      // Lưu lại
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(allFavorites))
+      console.log('Saved favorite status:', { productId, status, userFavorites: allFavorites[token] })
+    } catch (error) {
+      console.error('Error saving favorite status to localStorage:', error)
+    }
+  }
+
+  // Load trạng thái yêu thích ngay khi component mount
+  useEffect(() => {
+    if (id && token) {
+      const savedStatus = getFavoriteStatus(id)
+      console.log('Loaded favorite status from localStorage:', { productId: id, status: savedStatus })
+      setIsLiked(savedStatus)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, token])
+
   useEffect(() => {
     setLoading(true)
     setErrorMessage(null)
+
     getProductDetail(id)
       .then(res => {
         if (res?.statusCode === 404) {
@@ -52,6 +106,22 @@ const ProductDetail = () => {
         }
         const p = res?.data
         setProduct(p)
+
+        // Kiểm tra trạng thái từ localStorage trước
+        const localFavoriteStatus = getFavoriteStatus(id)
+        console.log('Product loaded:', {
+          productId: id,
+          apiFavorite: p?.isFavorite,
+          localFavorite: localFavoriteStatus
+        })
+
+        // Ưu tiên localStorage nếu có, không thì dùng API
+        const finalStatus = localFavoriteStatus !== false ? localFavoriteStatus : (p?.isFavorite || false)
+        setIsLiked(finalStatus)
+
+        // Sync với localStorage (đảm bảo consistency)
+        setFavoriteStatus(id, finalStatus)
+
         const allImages = [
           p?.commonImage && (p.commonImage.startsWith("http") ? p.commonImage : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${p.commonImage}`),
           ...(p?.moreImages?.map(img => img.url.startsWith("http") ? img.url : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${img.url}`) || [])
@@ -68,7 +138,21 @@ const ProductDetail = () => {
         setProduct(null)
       })
       .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  // Debug localStorage khi component mount
+  useEffect(() => {
+    if (token) {
+      try {
+        const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
+        console.log('All favorites in localStorage:', allFavorites)
+        console.log('Current user favorites:', allFavorites[token])
+      } catch (error) {
+        console.error('Error reading localStorage:', error)
+      }
+    }
+  }, [token])
 
   if (loading) {
     return <LoadingSpinner />
@@ -88,8 +172,57 @@ const ProductDetail = () => {
     )
   }
 
-  const handleLikeToggle = () => {
-    setIsLiked(!isLiked)
+  // Xử lý yêu thích sản phẩm
+  const handleLikeToggle = async () => {
+    if (!token) {
+      setToastMessage("Vui lòng đăng nhập để yêu thích sản phẩm!")
+      setShowToast(true)
+      return
+    }
+
+    setFavoriteLoading(true)
+
+    // Lưu trạng thái cũ để rollback nếu API thất bại
+    const oldStatus = isLiked
+    const newStatus = !isLiked
+
+    console.log('Toggling favorite:', { productId: product.id, oldStatus, newStatus })
+
+    // Cập nhật UI và localStorage ngay lập tức (optimistic update)
+    setIsLiked(newStatus)
+    setFavoriteStatus(product.id, newStatus)
+
+    try {
+      const response = await favoriteProduct(product.id, token)
+      console.log('API response:', response)
+
+      if (response?.statusCode === 200) {
+        // API thành công, giữ nguyên trạng thái đã cập nhật
+        setToastMessage(
+          newStatus
+            ? "Đã thêm vào danh sách yêu thích!"
+            : "Đã bỏ khỏi danh sách yêu thích!"
+        )
+        setShowToast(true)
+        console.log('Favorite updated successfully')
+      } else {
+        // API thất bại, rollback trạng thái
+        console.log('API failed, rolling back')
+        setIsLiked(oldStatus)
+        setFavoriteStatus(product.id, oldStatus)
+        setToastMessage(response?.message || "Có lỗi xảy ra!")
+        setShowToast(true)
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error)
+      // API thất bại, rollback trạng thái
+      setIsLiked(oldStatus)
+      setFavoriteStatus(product.id, oldStatus)
+      setToastMessage("Có lỗi xảy ra khi cập nhật yêu thích!")
+      setShowToast(true)
+    } finally {
+      setFavoriteLoading(false)
+    }
   }
 
   const handleAddToCart = async () => {
@@ -238,11 +371,6 @@ const ProductDetail = () => {
           setShowToast(true)
           setShowBuyNowModal(false)
           setCartQuantity(1)
-
-          // Chuyển đến trang đơn hàng sau 2 giây
-          setTimeout(() => {
-
-          }, 2000)
         }
       } else {
         setToastMessage(orderRes.message || "Đặt hàng thất bại!")
@@ -391,14 +519,28 @@ const ProductDetail = () => {
                   className="rounded-circle shadow-sm"
                   style={{ width: "50px", height: "50px" }}
                   onClick={handleLikeToggle}
+                  disabled={favoriteLoading}
+                  title={isLiked ? "Bỏ yêu thích" : "Yêu thích"}
                 >
-                  <Heart
-                    size={20}
-                    fill={isLiked ? "#ff0000" : "gray"}
-                    color={isLiked ? "#ff0000" : "gray"}
-                  />
+                  {favoriteLoading ? (
+                    <div className="spinner-border spinner-border-sm" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  ) : isLiked ? (
+                    <HeartFill size={20} color="#ff0000" />
+                  ) : (
+                    <Heart size={20} color="gray" />
+                  )}
                 </Button>
               </div>
+
+
+              // eslint-disable-next-line no-undef
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mt-3 p-2 bg-light small">
+                  <strong>Debug:</strong> isLiked: {isLiked.toString()}, productId: {product.id}
+                </div>
+              )}
 
               {/* Button đánh giá */}
               <div className="mt-3">
@@ -421,7 +563,7 @@ const ProductDetail = () => {
             show={showToast}
             delay={3000}
             autohide
-            bg={toastMessage.includes("thất bại") || toastMessage.includes("đăng nhập") || toastMessage.includes("hết hàng") || toastMessage.includes("Lỗi") ? "danger" : "success"}
+            bg={toastMessage.includes("thất bại") || toastMessage.includes("đăng nhập") || toastMessage.includes("hết hàng") || toastMessage.includes("Lỗi") || toastMessage.includes("lỗi") ? "danger" : "success"}
           >
             <Toast.Body className="text-white">{toastMessage}</Toast.Body>
           </Toast>

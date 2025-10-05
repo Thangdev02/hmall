@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Form, Badge, Pagination } from "react-bootstrap";
 import { motion } from "framer-motion";
-import { Star, Heart, Search, Filter } from "react-bootstrap-icons";
+import { Star, Heart, Search, Filter, Shop } from "react-bootstrap-icons";
 import "./Products.css";
 import { Link } from "react-router-dom";
 import { getProducts } from "../../api/product";
@@ -290,6 +290,20 @@ const Products = () => {
                                                 <Card.Title className="fw-bold card-title" style={{ color: "#2c3e50" }}>
                                                     {product.name}
                                                 </Card.Title>
+
+                                                {/* Thêm thông tin shop */}
+                                                {product.shopID && product.shopName && (
+                                                    <div className="mb-2">
+                                                        <div className="d-flex align-items-center">
+                                                            <Shop size={14} className="text-primary me-1" />
+                                                            <small className="text-muted fw-bold">
+                                                                {product.shopName}
+                                                            </small>
+                                                        </div>
+
+                                                    </div>
+                                                )}
+
                                                 <Card.Text className="text-muted card-text" style={{ fontSize: "0.9rem" }}>
                                                     <div dangerouslySetInnerHTML={{ __html: product.description }} />
                                                 </Card.Text>
@@ -299,7 +313,7 @@ const Products = () => {
                                                     </span>
                                                     <div className="d-flex align-items-center">
                                                         <Star fill="#ffc107" color="#ffc107" size={16} />
-                                                        <span className="ms-1 text-muted fw-bold">{product.rating}</span>
+                                                        <span className="ms-1 text-muted fw-bold">{product.rating || 0}</span>
                                                     </div>
                                                 </div>
                                                 <div className="d-grid gap-2">
