@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 
 import "./Register.css";
 import { register } from "../../api/auth";
@@ -19,6 +20,7 @@ const Register = () => {
         phoneNumber: "",
         role: "User",
     });
+    const [showPassword, setShowPassword] = useState(false);
     const [shopForm, setShopForm] = useState({
         name: "",
         address: "",
@@ -35,7 +37,6 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    // Bước 1: Đăng ký tài khoản
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
         setError("");
@@ -45,13 +46,26 @@ const Register = () => {
         setForm({ ...form, role: e.target.value });
     };
 
+    // ✅ Kiểm tra mật khẩu hợp lệ
+    const validatePassword = (password) => {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[@!@#$%^&*])[A-Za-z\d@!@#$%^&*]{8,}$/;
+        return regex.test(password);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
         if (!form.userName || !form.email || !form.password || !form.phoneNumber) {
             setError("Vui lòng nhập đầy đủ thông tin!");
             return;
         }
+
+        if (!validatePassword(form.password)) {
+            setError("Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt (@!@#$%^&*).");
+            return;
+        }
+
         setLoading(true);
         try {
             const res = await register(form);
@@ -61,9 +75,9 @@ const Register = () => {
                         ...shopForm,
                         email: form.email,
                         phone: form.phoneNumber,
-                        userID: res.data.id, // lấy userID từ API trả về
+                        userID: res.data.id,
                     });
-                    setStep(2); // chuyển sang bước đăng ký shop
+                    setStep(2);
                 } else {
                     navigate("/login");
                 }
@@ -77,7 +91,6 @@ const Register = () => {
         setLoading(false);
     };
 
-    // Bước 2: Đăng ký shop
     const handleShopChange = (e) => {
         setShopForm({ ...shopForm, [e.target.name]: e.target.value });
         setError("");
@@ -92,7 +105,7 @@ const Register = () => {
         }
         setLoading(true);
         try {
-            const token = ""; // Nếu API yêu cầu token, lấy từ localStorage
+            const token = "";
             const res = await registerShop(shopForm, token);
             if (res && res.statusCode === 200) {
                 navigate("/login");
@@ -112,6 +125,7 @@ const Register = () => {
                 <div className="login-shape login-shape-1"></div>
                 <div className="login-shape login-shape-2"></div>
                 <div className="login-shape login-shape-3"></div>
+
                 {step === 1 ? (
                     <>
                         <h2 className="login-title">Đăng Ký Tài Khoản</h2>
@@ -134,15 +148,25 @@ const Register = () => {
                                 value={form.email}
                                 onChange={handleChange}
                             />
+
                             <label htmlFor="password">Mật khẩu</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                placeholder="Nhập mật khẩu"
-                                value={form.password}
-                                onChange={handleChange}
-                            />
+                            <div className="password-field">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Nhập mật khẩu"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                />
+                                <span
+                                    className="password-toggle"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeTwoTone /> : <EyeInvisibleOutlined />}
+                                </span>
+                            </div>
+
                             <label htmlFor="phoneNumber">Số điện thoại</label>
                             <input
                                 id="phoneNumber"
@@ -152,18 +176,26 @@ const Register = () => {
                                 value={form.phoneNumber}
                                 onChange={handleChange}
                             />
+
                             <label htmlFor="role">Vai trò</label>
                             <select id="role" name="role" value={form.role} onChange={handleRoleChange}>
                                 {roleOptions.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                 ))}
                             </select>
-                            {error && <div style={{ color: "#e74c3c", marginBottom: 8, fontSize: 14 }}>{error}</div>}
+
+                            {error && (
+                                <div style={{ color: "#e74c3c", marginBottom: 8, fontSize: 14 }}>{error}</div>
+                            )}
+
                             <button className="login-btn" type="submit" disabled={loading}>
                                 {loading ? "Đang đăng ký..." : "Đăng Ký"}
                             </button>
                         </form>
-                        <a className="login-link" href="/login">Đã có tài khoản? Đăng nhập</a>
+
+                        <a className="login-link" href="/login">
+                            Đã có tài khoản? Đăng nhập
+                        </a>
                     </>
                 ) : (
                     <>

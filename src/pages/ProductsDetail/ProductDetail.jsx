@@ -189,8 +189,9 @@ const ProductDetail = () => {
   // Xử lý yêu thích sản phẩm
   const handleLikeToggle = async () => {
     if (!token) {
-      setToastMessage("Vui lòng đăng nhập để yêu thích sản phẩm!")
-      setShowToast(true)
+      // Lưu trang hiện tại vào localStorage để redirect sau khi login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname)
+      navigate("/login")
       return
     }
 
@@ -253,8 +254,9 @@ const ProductDetail = () => {
     }
 
     if (!token) {
-      setToastMessage("Vui lòng đăng nhập để thêm vào giỏ hàng!")
-      setShowToast(true)
+      // Lưu trang hiện tại vào localStorage để redirect sau khi login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname)
+      navigate("/login")
       return
     }
 
@@ -292,8 +294,9 @@ const ProductDetail = () => {
     }
 
     if (!token) {
-      setToastMessage("Vui lòng đăng nhập để mua hàng!")
-      setShowToast(true)
+      // Lưu trang hiện tại vào localStorage để redirect sau khi login
+      localStorage.setItem('redirectAfterLogin', window.location.pathname)
+      navigate("/login")
       return
     }
 

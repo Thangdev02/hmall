@@ -19,6 +19,34 @@
     position: relative;
     z-index: 1;
 }
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 40px; /* chừa khoảng trống cho icon */
+  box-sizing: border-box;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;          /* canh icon sát mép phải */
+  top: 40%;             /* canh giữa chiều cao input */
+  transform: translateY(-50%);
+  color: #888;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.password-toggle:hover {
+  color: #000;
+}
 
 .register-title {
     color: #04202c;
