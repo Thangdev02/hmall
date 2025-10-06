@@ -1,13 +1,12 @@
-/* eslint-disable no-undef */
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { Container, Row, Col, Button, Badge, Card, Form, Modal, Toast, ToastContainer } from "react-bootstrap"
 import { motion } from "framer-motion"
-import { Star, Heart, HeartFill, ChatText } from "react-bootstrap-icons"
+import { Star, Heart, HeartFill, ChatText, ChevronLeft, ChevronRight } from "react-bootstrap-icons"
 import { useState, useEffect } from "react"
 import { getProductDetail, favoriteProduct } from "../../api/product"
 import { addItemToCart } from "../../api/cart"
 import { createFastOrder, createQRPayment } from "../../api/oder"
-import ReactQuill from "react-quill"
+
 import "react-quill/dist/quill.snow.css"
 import LoadingSpinner from "../../components/LoadingSpinner"
 import ProductFeedback from "../../components/ProductFeedback/ProductFeedback"
@@ -153,6 +152,21 @@ const ProductDetail = () => {
       }
     }
   }, [token])
+
+  // Handle previous/next image navigation
+  const handlePreviousImage = () => {
+    if (!product.allImages || product.allImages.length <= 1) return
+    const currentIndex = product.allImages.indexOf(selectedImage)
+    const prevIndex = currentIndex === 0 ? product.allImages.length - 1 : currentIndex - 1
+    setSelectedImage(product.allImages[prevIndex])
+  }
+
+  const handleNextImage = () => {
+    if (!product.allImages || product.allImages.length <= 1) return
+    const currentIndex = product.allImages.indexOf(selectedImage)
+    const nextIndex = currentIndex === product.allImages.length - 1 ? 0 : currentIndex + 1
+    setSelectedImage(product.allImages[nextIndex])
+  }
 
   if (loading) {
     return <LoadingSpinner />
@@ -428,9 +442,65 @@ const ProductDetail = () => {
         <Row className="mb-5">
           {/* Hình ảnh */}
           <Col lg={6} className="mb-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="position-relative"
+            >
               <img src={selectedImage} alt={product.name} className="main-product-img" />
+
+              {/* Navigation buttons */}
+              {product.allImages && product.allImages.length > 1 && (
+                <>
+                  {/* Previous button */}
+                  <Button
+                    variant="light"
+                    className="position-absolute top-50 start-0 translate-middle-y ms-2 rounded-circle shadow"
+                    style={{
+                      width: "45px",
+                      height: "45px",
+                      zIndex: 2,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)"
+                    }}
+                    onClick={handlePreviousImage}
+                  >
+                    <ChevronLeft size={20} />
+                  </Button>
+
+                  {/* Next button */}
+                  <Button
+                    variant="light"
+                    className="position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle shadow"
+                    style={{
+                      width: "45px",
+                      height: "45px",
+                      zIndex: 2,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)"
+                    }}
+                    onClick={handleNextImage}
+                  >
+                    <ChevronRight size={20} />
+                  </Button>
+
+                  {/* Image indicator */}
+                  <div
+                    className="position-absolute bottom-0 start-50 translate-middle-x mb-3"
+                    style={{
+                      backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      borderRadius: "15px",
+                      padding: "5px 10px"
+                    }}
+                  >
+                    <small className="text-white">
+                      {product.allImages.indexOf(selectedImage) + 1} / {product.allImages.length}
+                    </small>
+                  </div>
+                </>
+              )}
             </motion.div>
+
+            {/* Thumbnail images */}
             <div className="d-flex gap-3 mt-3 flex-wrap">
               {(product.allImages || []).map((img, idx) => (
                 <img
@@ -438,7 +508,15 @@ const ProductDetail = () => {
                   src={img}
                   alt={`thumb-${idx}`}
                   className={`thumb-img ${selectedImage === img ? "active" : ""}`}
-                  style={{ width: 80, height: 80, objectFit: "cover", cursor: "pointer", border: selectedImage === img ? "2px solid #84B4C8" : "1px solid #eee" }}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    objectFit: "cover",
+                    cursor: "pointer",
+                    border: selectedImage === img ? "2px solid #84B4C8" : "1px solid #eee",
+                    borderRadius: "8px",
+                    transition: "all 0.3s ease"
+                  }}
                   onClick={() => setSelectedImage(img)}
                 />
               ))}
@@ -533,14 +611,6 @@ const ProductDetail = () => {
                   )}
                 </Button>
               </div>
-
-
-              // eslint-disable-next-line no-undef
-              {process.env.NODE_ENV === 'development' && (
-                <div className="mt-3 p-2 bg-light small">
-                  <strong>Debug:</strong> isLiked: {isLiked.toString()}, productId: {product.id}
-                </div>
-              )}
 
               {/* Button đánh giá */}
               <div className="mt-3">

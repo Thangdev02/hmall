@@ -8,7 +8,8 @@ import { getProducts } from "../../api/product";
 
 const Products = () => {
     const [selectedCategory, setSelectedCategory] = useState("all");
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState(""); // Input value
+    const [searchQuery, setSearchQuery] = useState(""); // Actual search query sent to API
     const [sortBy, setSortBy] = useState("name");
     const [showFilters, setShowFilters] = useState(false);
     const [products, setProducts] = useState([]);
@@ -18,6 +19,7 @@ const Products = () => {
     const [pageSize, setPageSize] = useState(9);
     const [totalItems, setTotalItems] = useState(0);
     const [showLoadMore, setShowLoadMore] = useState(true);
+    const [statusFilter, setStatusFilter] = useState("all");
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -25,12 +27,25 @@ const Products = () => {
             setError(null);
 
             try {
-                const res = await getProducts({
-                    search: searchTerm,
-                    filter: selectedCategory !== "all" ? selectedCategory : "",
+                const params = {
+                    search: searchQuery, // Use searchQuery instead of searchTerm
                     pageNumber,
                     pageSize,
-                });
+                };
+
+                if (selectedCategory !== "all") {
+                    params.filter = selectedCategory;
+                }
+
+                if (statusFilter === "active") {
+                    params.isActive = true;
+                } else if (statusFilter === "inactive") {
+                    params.isActive = false;
+                }
+
+                console.log("API params:", params);
+
+                const res = await getProducts(params);
 
                 console.log("API response:", res);
 
@@ -46,7 +61,7 @@ const Products = () => {
         };
 
         fetchProducts();
-    }, [pageNumber, pageSize, selectedCategory, searchTerm]);
+    }, [pageNumber, pageSize, selectedCategory, searchQuery, statusFilter]); // Use searchQuery in dependency
 
     const categories = useMemo(() => {
         const set = new Set(products.map((p) => p.category).filter(Boolean));
@@ -70,6 +85,20 @@ const Products = () => {
         });
         return filtered;
     }, [products, sortBy]);
+
+    // Handle search button click
+    const handleSearch = () => {
+        setSearchQuery(searchTerm);
+        setPageNumber(1); // Reset to first page
+        setShowLoadMore(true); // Reset load more
+    };
+
+    // Handle Enter key press in search input
+    const handleKeyPress = (e) => {
+        if (e.key === "Enter") {
+            handleSearch();
+        }
+    };
 
     const handleLoadMore = () => {
         setPageSize(12);
@@ -109,31 +138,48 @@ const Products = () => {
                 </section>
 
                 <Row className="mb-4">
-                    <Col lg={8}>
-                        <div className="position-relative">
-                            <Search
-                                className="position-absolute"
-                                style={{
-                                    left: "15px",
-                                    top: "50%",
-                                    transform: "translateY(-50%)",
-                                    color: "#6c757d",
-                                }}
-                            />
+                    <Col lg={5}>
+                        <div className="position-relative d-flex">
                             <Form.Control
                                 type="text"
                                 placeholder="Tìm kiếm sản phẩm..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyPress={handleKeyPress}
                                 style={{
-                                    paddingLeft: "45px",
-                                    borderRadius: "25px",
+                                    paddingLeft: "15px",
+                                    borderRadius: "25px 0 0 25px",
                                     border: "2px solid #e9ecef",
+                                    borderRight: "none",
                                 }}
                             />
+                            <Button
+                                variant="primary"
+                                onClick={handleSearch}
+                                style={{
+                                    borderRadius: "0 25px 25px 0",
+                                    border: "2px solid #84B4C8",
+                                    backgroundColor: "#84B4C8",
+                                    borderLeft: "none",
+                                    minWidth: "60px",
+                                }}
+                            >
+                                <Search size={16} />
+                            </Button>
                         </div>
                     </Col>
-                    <Col lg={4} className="d-flex gap-2">
+                    <Col lg={2}>
+                        <Form.Select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            style={{ borderRadius: "25px" }}
+                        >
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="active">Còn hàng</option>
+                            <option value="inactive">Hết hàng</option>
+                        </Form.Select>
+                    </Col>
+                    <Col lg={3}>
                         <Form.Select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
@@ -144,6 +190,8 @@ const Products = () => {
                             <option value="price-high">Giá cao đến thấp</option>
                             <option value="rating">Đánh giá cao nhất</option>
                         </Form.Select>
+                    </Col>
+                    <Col lg={2}>
                         <Button
                             variant="outline-secondary"
                             onClick={() => setShowFilters(!showFilters)}
@@ -216,10 +264,16 @@ const Products = () => {
                                     trong danh mục "<strong>{selectedCategory}</strong>"
                                 </span>
                             )}
-                            {searchTerm && (
+                            {statusFilter !== "all" && (
                                 <span>
                                     {" "}
-                                    cho từ khóa "<strong>{searchTerm}</strong>"
+                                    - <strong>{statusFilter === "active" ? "Còn hàng" : "Hết hàng"}</strong>
+                                </span>
+                            )}
+                            {searchQuery && (
+                                <span>
+                                    {" "}
+                                    cho từ khóa "<strong>{searchQuery}</strong>"
                                 </span>
                             )}
                         </p>
@@ -291,7 +345,6 @@ const Products = () => {
                                                     {product.name}
                                                 </Card.Title>
 
-                                                {/* Thêm thông tin shop */}
                                                 {product.shopID && product.shopName && (
                                                     <div className="mb-2">
                                                         <div className="d-flex align-items-center">
@@ -300,7 +353,6 @@ const Products = () => {
                                                                 {product.shopName}
                                                             </small>
                                                         </div>
-
                                                     </div>
                                                 )}
 
@@ -336,7 +388,9 @@ const Products = () => {
                                     className="btn-primary-custom"
                                     onClick={() => {
                                         setSearchTerm("");
+                                        setSearchQuery("");
                                         setSelectedCategory("all");
+                                        setStatusFilter("all");
                                     }}
                                 >
                                     Xem Tất Cả Sản Phẩm

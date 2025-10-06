@@ -677,7 +677,7 @@ const Blog = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Ảnh bài viết</Form.Label>
+                            <Form.Label>Ảnh bài viết*</Form.Label>
                             <Form.Control
                                 type="file"
                                 accept="image/*"
@@ -687,7 +687,7 @@ const Blog = () => {
                                 aria-describedby="image-help"
                             />
                             <Form.Text id="image-help" muted>
-                                Chọn file ảnh (jpg, png, tối đa 5MB)
+                                Chọn file ảnh (jpg, png, tối đa 5MB)*
                             </Form.Text>
                             {newBlog.image && (
                                 <div className="mt-2 position-relative d-inline-block">

@@ -15,7 +15,7 @@ export default function UsersManagement() {
     });
     const [filters, setFilters] = useState({
         search: "",
-        filter: ""
+        isActive: undefined // Thay đổi từ filter thành isActive
     });
 
     const token = localStorage.getItem("token");
@@ -23,12 +23,18 @@ export default function UsersManagement() {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const response = await getUsers({
+            const params = {
                 pageNumber: pagination.pageNumber,
                 pageSize: pagination.pageSize,
-                search: filters.search,
-                filter: filters.filter
-            }, token);
+                search: filters.search
+            };
+
+            // Chỉ thêm isActive nếu có giá trị
+            if (filters.isActive !== undefined) {
+                params.isActive = filters.isActive;
+            }
+
+            const response = await getUsers(params, token);
 
             if (response.statusCode === 200) {
                 setUsers(response.data.items || []);
@@ -72,10 +78,21 @@ export default function UsersManagement() {
         fetchUsers();
     };
 
+    const handleStatusFilter = (value) => {
+        let isActive;
+        if (value === "active") isActive = true;
+        else if (value === "blocked") isActive = false;
+        else isActive = undefined; // Tất cả trạng thái
+
+        setFilters(prev => ({ ...prev, isActive: isActive }));
+        setPagination(prev => ({ ...prev, pageNumber: 1 }));
+    };
+
+    // Thay đổi dependency từ filters.filter thành filters.isActive
     useEffect(() => {
         fetchUsers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pagination.pageNumber, pagination.pageSize]);
+    }, [pagination.pageNumber, pagination.pageSize, filters.isActive]);
 
     useEffect(() => {
         if (success) {
@@ -110,8 +127,8 @@ export default function UsersManagement() {
                 </Col>
                 <Col md={3}>
                     <Form.Select
-                        value={filters.filter}
-                        onChange={(e) => setFilters(prev => ({ ...prev, filter: e.target.value }))}
+                        value={filters.isActive === undefined ? "" : filters.isActive.toString()}
+                        onChange={(e) => handleStatusFilter(e.target.value)}
                     >
                         <option value="">Tất cả trạng thái</option>
                         <option value="active">Đang hoạt động</option>

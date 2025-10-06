@@ -46,19 +46,22 @@ const ScrollToTop = () => {
           <Button
             onClick={scrollToTop}
             style={{
-              width: "50px",
-              height: "50px",
+              width: "60px",
+              height: "60px",
               borderRadius: "50%",
-              backgroundColor: "#84B4C8",
+              backgroundColor: "#B8D6E0", // 💠 màu nhạt hơn #84B4C8
               border: "none",
-              boxShadow: "0 4px 12px rgba(132, 180, 200, 0.3)",
+              boxShadow: "0 4px 12px rgba(132, 180, 200, 0.25)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              transition: "all 0.3s ease",
             }}
             className="scroll-to-top-btn"
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#A0C6D4")} // hover nhạt hơn chút
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#B8D6E0")}
           >
-            <ArrowUp size={20} />
+            <ArrowUp size={102} color="#ffffff" /> {/* 🔼 icon to và sáng hơn */}
           </Button>
         </motion.div>
       )}

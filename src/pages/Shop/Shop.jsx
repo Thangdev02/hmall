@@ -269,17 +269,7 @@ const Shop = () => {
                                                     <small>{shop.city}, {shop.province}</small>
                                                 </div>
                                             </div>
-                                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                                <div className="d-flex align-items-center">
-                                                    <Star fill="#ffc107" color="#ffc107" size={16} />
-                                                    <span className="ms-1 text-muted fw-bold">
-                                                        {shop.ratingAverage || 0}
-                                                    </span>
-                                                    <span className="ms-1 text-muted">
-                                                        (0 đánh giá)
-                                                    </span>
-                                                </div>
-                                            </div>
+
                                             <div className="d-grid gap-2">
                                                 <Link to={`/shop/${shop.shopID}/products`} style={{ textDecoration: "none" }}>
                                                     <Button

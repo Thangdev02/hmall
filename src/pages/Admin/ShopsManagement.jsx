@@ -361,8 +361,6 @@ export default function ShopsManagement() {
                                                             </div>
                                                         </Col>
                                                     </Row>
-
-
                                                 </Col>
                                             </Row>
                                         </Card.Body>

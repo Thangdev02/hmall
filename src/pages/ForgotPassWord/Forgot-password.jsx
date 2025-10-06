@@ -145,10 +145,10 @@ const ForgotPassword = () => {
                             id="code"
                             name="code"
                             type="text"
-                            placeholder="Nhập mã OTP"
+                            placeholder="Nhập mã OTP (có thể là 4-8 ký tự)"
                             value={form.code}
                             onChange={handleChange}
-                            maxLength="6"
+                        // Bỏ maxLength để cho phép nhập nhiều ký tự hơn
                         />
 
                         <label htmlFor="newPassword">Mật khẩu mới</label>

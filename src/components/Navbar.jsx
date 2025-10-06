@@ -1,12 +1,12 @@
 import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap"
-import { LinkContainer } from "react-router-bootstrap"
 import { House, Grid3x3Gap, Telephone, InfoCircle, Journal, Cart, PersonCircle, Gear, Shop } from "react-bootstrap-icons"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 const NavigationBar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"))
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Lắng nghe sự thay đổi của localStorage (nếu có nhiều tab)
@@ -27,56 +27,108 @@ const NavigationBar = () => {
     navigate("/settings");
   };
 
+  // Hàm xử lý navigation cải tiến
+  const handleNavigation = (path) => {
+    if (location.pathname === path) {
+      // Nếu đang ở trang đó rồi, force reload với key mới
+      navigate(path, { replace: true, state: { reload: Date.now() } });
+      setTimeout(() => {
+        window.location.reload();
+      }, 10);
+    } else {
+      navigate(path);
+    }
+  };
+
   return (
-    <Navbar expand="lg" className="navbar-custom" fixed="top">
+    <Navbar expand="lg" className="navbar-custom" fixed="top" key={`navbar-${Date.now()}`}>
       <Container>
-        <LinkContainer to="/" style={{ width: "80px", height: "80px" }}>
-          <img src="./images/HMallLogo.jpg" alt="Logo" />
-        </LinkContainer>
+        <div
+          style={{ width: "80px", height: "80px", cursor: "pointer" }}
+          onClick={() => handleNavigation("/")}
+        >
+          <img src="./images/HMallLogo.jpg" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
-            <LinkContainer to="/">
-              <Nav.Link className="nav-link-custom">
-                <House className="me-1" /> Trang Chủ
-              </Nav.Link>
-            </LinkContainer>
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <House className="me-1" /> Trang Chủ
+            </Nav.Link>
 
-            <LinkContainer to="/products">
-              <Nav.Link className="nav-link-custom">
-                <Grid3x3Gap className="me-1" /> Sản phẩm
-              </Nav.Link>
-            </LinkContainer>
-            <LinkContainer to="/shop">
-              <Nav.Link className="nav-link-custom">
-                <Shop className="me-1" />Cửa hàng
-              </Nav.Link>
-            </LinkContainer>
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/products" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/products");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <Grid3x3Gap className="me-1" /> Sản phẩm
+            </Nav.Link>
 
-            <LinkContainer to="/about">
-              <Nav.Link className="nav-link-custom">
-                <InfoCircle className="me-1" /> Giới Thiệu
-              </Nav.Link>
-            </LinkContainer>
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/shop" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/shop");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <Shop className="me-1" />Cửa hàng
+            </Nav.Link>
 
-            <LinkContainer to="/blog">
-              <Nav.Link className="nav-link-custom">
-                <Journal className="me-1" /> Bài Viết
-              </Nav.Link>
-            </LinkContainer>
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/about" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/about");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <InfoCircle className="me-1" /> Giới Thiệu
+            </Nav.Link>
 
-            <LinkContainer to="/contact">
-              <Nav.Link className="nav-link-custom">
-                <Telephone className="me-1" /> Liên Hệ
-              </Nav.Link>
-            </LinkContainer>
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/blog" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/blog");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <Journal className="me-1" /> Bài Viết
+            </Nav.Link>
 
-            <LinkContainer to="/cart">
-              <Nav.Link className="nav-link-custom">
-                <Cart className="me-1" /> Giỏ Hàng
-              </Nav.Link>
-            </LinkContainer>
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/contact" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/contact");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <Telephone className="me-1" /> Liên Hệ
+            </Nav.Link>
+
+            <Nav.Link
+              className={`nav-link-custom ${location.pathname === "/cart" ? "active" : ""}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigation("/cart");
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <Cart className="me-1" /> Giỏ Hàng
+            </Nav.Link>
           </Nav>
 
           {/* Avatar và menu tài khoản */}
@@ -88,20 +140,35 @@ const NavigationBar = () => {
                 align="end"
                 className="nav-link-custom"
               >
-                <NavDropdown.Item onClick={handleSettings}>
+                <NavDropdown.Item
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleSettings();
+                  }}
+                >
                   <Gear className="me-2" /> Cài đặt
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item onClick={handleLogout}>
+                <NavDropdown.Item
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLogout();
+                  }}
+                >
                   Đăng Xuất
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <LinkContainer to="/login">
-                <Nav.Link className="nav-link-custom">
-                  <PersonCircle size={24} />
-                </Nav.Link>
-              </LinkContainer>
+              <Nav.Link
+                className="nav-link-custom"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigation("/login");
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <PersonCircle size={24} />
+              </Nav.Link>
             )}
           </Nav>
         </Navbar.Collapse>
