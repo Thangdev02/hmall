@@ -1,15 +1,18 @@
 import { useState, useMemo, useEffect } from "react";
-import { Container, Row, Col, Card, Button, Form, Badge, Pagination } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Form, Badge, Pagination, Toast, ToastContainer, Spinner } from "react-bootstrap";
 import { motion } from "framer-motion";
-import { Star, Heart, Search, Filter, Shop } from "react-bootstrap-icons";
+import { Star, Heart, HeartFill, Search, Filter, Shop } from "react-bootstrap-icons";
 import "./Products.css";
-import { Link } from "react-router-dom";
-import { getProducts } from "../../api/product";
+import { Link, useNavigate } from "react-router-dom";
+import { getProducts, favoriteProduct } from "../../api/product";
 
 const Products = () => {
+    const navigate = useNavigate();
+    const token = localStorage.getItem("token");
+
     const [selectedCategory, setSelectedCategory] = useState("all");
-    const [searchTerm, setSearchTerm] = useState(""); // Input value
-    const [searchQuery, setSearchQuery] = useState(""); // Actual search query sent to API
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("name");
     const [showFilters, setShowFilters] = useState(false);
     const [products, setProducts] = useState([]);
@@ -21,6 +24,106 @@ const Products = () => {
     const [showLoadMore, setShowLoadMore] = useState(true);
     const [statusFilter, setStatusFilter] = useState("all");
 
+    // ✅ States cho favorite functionality
+    const [favoriteLoadings, setFavoriteLoadings] = useState({});
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
+
+    // ✅ Utility functions cho localStorage đồng bộ
+    const FAVORITES_KEY = 'userFavorites'
+
+    const getFavoriteStatus = (productId) => {
+        if (!token || !productId) return false
+        try {
+            const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
+            const userFavorites = allFavorites[token] || {}
+            return Boolean(userFavorites[productId])
+        } catch (error) {
+            console.error('Error reading favorites from localStorage:', error)
+            return false
+        }
+    }
+
+    const setFavoriteStatus = (productId, status) => {
+        if (!token || !productId) return
+        try {
+            const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
+
+            if (!allFavorites[token]) {
+                allFavorites[token] = {}
+            }
+
+            if (status) {
+                allFavorites[token][productId] = true
+            } else {
+                delete allFavorites[token][productId]
+            }
+
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(allFavorites))
+
+            // ✅ Dispatch custom event để thông báo cho các component khác
+            window.dispatchEvent(new CustomEvent('localStorageChange', {
+                detail: { key: FAVORITES_KEY, productId, status }
+            }))
+
+            console.log('Saved favorite status:', { productId, status, userFavorites: allFavorites[token] })
+        } catch (error) {
+            console.error('Error saving favorite status to localStorage:', error)
+        }
+    }
+
+    // ✅ Handle favorite toggle
+    const handleFavoriteToggle = async (e, productId) => {
+        e.preventDefault(); // Ngăn navigate khi click heart
+        e.stopPropagation(); // Ngăn event bubble
+
+        if (!token) {
+            localStorage.setItem('redirectAfterLogin', window.location.pathname)
+            navigate("/login")
+            return
+        }
+
+        setFavoriteLoadings(prev => ({ ...prev, [productId]: true }));
+
+        // Lưu trạng thái cũ để rollback nếu cần
+        const oldStatus = getFavoriteStatus(productId)
+        const newStatus = !oldStatus
+
+        // Optimistic update
+        setFavoriteStatus(productId, newStatus)
+
+        try {
+            const response = await favoriteProduct(productId, token)
+
+            if (response?.statusCode === 200) {
+                // API thành công, giữ nguyên trạng thái đã cập nhật
+                setToastMessage(
+                    newStatus
+                        ? "Đã thêm vào danh sách yêu thích!"
+                        : "Đã bỏ khỏi danh sách yêu thích!"
+                )
+                setToastType("success")
+                setShowToast(true)
+            } else {
+                // API thất bại, rollback
+                setFavoriteStatus(productId, oldStatus)
+                setToastMessage(response?.message || "Có lỗi xảy ra!")
+                setToastType("danger")
+                setShowToast(true)
+            }
+        } catch (error) {
+            console.error("Error toggling favorite:", error)
+            // API thất bại, rollback
+            setFavoriteStatus(productId, oldStatus)
+            setToastMessage("Có lỗi xảy ra khi cập nhật yêu thích!")
+            setToastType("danger")
+            setShowToast(true)
+        } finally {
+            setFavoriteLoadings(prev => ({ ...prev, [productId]: false }));
+        }
+    }
+
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
@@ -28,7 +131,7 @@ const Products = () => {
 
             try {
                 const params = {
-                    search: searchQuery, // Use searchQuery instead of searchTerm
+                    search: searchQuery,
                     pageNumber,
                     pageSize,
                 };
@@ -61,7 +164,7 @@ const Products = () => {
         };
 
         fetchProducts();
-    }, [pageNumber, pageSize, selectedCategory, searchQuery, statusFilter]); // Use searchQuery in dependency
+    }, [pageNumber, pageSize, selectedCategory, searchQuery, statusFilter]);
 
     const categories = useMemo(() => {
         const set = new Set(products.map((p) => p.category).filter(Boolean));
@@ -86,14 +189,12 @@ const Products = () => {
         return filtered;
     }, [products, sortBy]);
 
-    // Handle search button click
     const handleSearch = () => {
         setSearchQuery(searchTerm);
-        setPageNumber(1); // Reset to first page
-        setShowLoadMore(true); // Reset load more
+        setPageNumber(1);
+        setShowLoadMore(true);
     };
 
-    // Handle Enter key press in search input
     const handleKeyPress = (e) => {
         if (e.key === "Enter") {
             handleSearch();
@@ -318,6 +419,7 @@ const Products = () => {
                                                         Hết hàng
                                                     </Badge>
                                                 )}
+                                                {/* ✅ Favorite button với API integration */}
                                                 <Button
                                                     variant="light"
                                                     className="position-absolute"
@@ -330,9 +432,20 @@ const Products = () => {
                                                         display: "flex",
                                                         alignItems: "center",
                                                         justifyContent: "center",
+                                                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                                                        border: "none"
                                                     }}
+                                                    onClick={(e) => handleFavoriteToggle(e, product.id)}
+                                                    disabled={favoriteLoadings[product.id]}
+                                                    title={getFavoriteStatus(product.id) ? "Bỏ yêu thích" : "Yêu thích"}
                                                 >
-                                                    <Heart size={16} />
+                                                    {favoriteLoadings[product.id] ? (
+                                                        <Spinner size="sm" />
+                                                    ) : getFavoriteStatus(product.id) ? (
+                                                        <HeartFill color="#ff0000" size={16} />
+                                                    ) : (
+                                                        <Heart size={16} />
+                                                    )}
                                                 </Button>
                                             </div>
                                             <Card.Body className="card-body">
@@ -448,6 +561,19 @@ const Products = () => {
                         </Col>
                     </Row>
                 )}
+
+                {/* ✅ Toast notifications */}
+                <ToastContainer position="top-end" className="p-3">
+                    <Toast
+                        onClose={() => setShowToast(false)}
+                        show={showToast}
+                        delay={3000}
+                        autohide
+                        bg={toastType}
+                    >
+                        <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+                    </Toast>
+                </ToastContainer>
             </Container>
         </div>
     );

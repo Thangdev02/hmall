@@ -56,6 +56,41 @@ const Profile = () => {
 
     const fileInputRef = useRef();
 
+    // ✅ Utility functions cho localStorage đồng bộ với ProductDetail
+    const FAVORITES_KEY = 'userFavorites'
+
+    const setFavoriteStatusInLocalStorage = (productId, status) => {
+        if (!token || !productId) return
+        try {
+            // Lấy tất cả favorites
+            const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
+
+            // Đảm bảo có object cho user hiện tại
+            if (!allFavorites[token]) {
+                allFavorites[token] = {}
+            }
+
+            // Cập nhật trạng thái
+            if (status) {
+                allFavorites[token][productId] = true
+            } else {
+                delete allFavorites[token][productId]
+            }
+
+            // Lưu lại
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(allFavorites))
+
+            // ✅ Dispatch custom event để thông báo cho ProductDetail
+            window.dispatchEvent(new CustomEvent('localStorageChange', {
+                detail: { key: FAVORITES_KEY, productId, status }
+            }))
+
+            console.log('Updated localStorage favorite status:', { productId, status, userFavorites: allFavorites[token] })
+        } catch (error) {
+            console.error('Error saving favorite status to localStorage:', error)
+        }
+    }
+
     // Order Status Configuration
     const ORDER_STATUS = {
         WaitForPayment: { label: 'Chờ thanh toán', variant: 'warning' },
@@ -195,7 +230,7 @@ const Profile = () => {
         }
     }, [favoriteMessage]);
 
-    // Handle favorite toggle in favorites tab
+    // ✅ Handle favorite toggle in favorites tab với localStorage sync
     const handleRemoveFavorite = async (productId) => {
         setFavoriteActionLoading(prev => ({ ...prev, [productId]: true }));
 
@@ -205,6 +240,10 @@ const Profile = () => {
             if (response?.statusCode === 200) {
                 // Remove from favorites list
                 setFavoriteProducts(prev => prev.filter(product => product.productID !== productId));
+
+                // ✅ Cập nhật localStorage để sync với ProductDetail
+                setFavoriteStatusInLocalStorage(productId, false);
+
                 setFavoriteMessage("Đã bỏ khỏi danh sách yêu thích!");
             } else {
                 setFavoriteMessage(response?.message || "Có lỗi xảy ra!");

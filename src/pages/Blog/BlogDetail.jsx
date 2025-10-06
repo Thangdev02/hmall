@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { Container, Row, Col, Card, Button, Spinner, Alert } from "react-bootstrap";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Spinner, Alert, Toast, ToastContainer } from "react-bootstrap";
 import { motion } from "framer-motion";
 import { Calendar, Person, Clock, ArrowLeft, Heart, HeartFill, ChatDots } from "react-bootstrap-icons";
-import { getBlogDetail, getBlogs, createComment, getComments, editComment, deleteComment, createReply, likeBlog, checkLikeStatus } from "../../api/blog";
+import { getBlogDetail, getBlogs, createComment, getComments, editComment, deleteComment, createReply, likeBlog } from "../../api/blog";
 import { getUser } from "../../api/auth";
 import CommentSection from "../../components/Comments/CommentSection";
 import CommentForm from "../../components/Comments/CommentForm";
@@ -12,6 +12,7 @@ import 'react-quill/dist/quill.snow.css';
 
 const BlogDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [blog, setBlog] = useState(null);
   const [relatedBlogs, setRelatedBlogs] = useState([]);
   const [comments, setComments] = useState([]);
@@ -24,8 +25,14 @@ const BlogDetail = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
   const [isLiking, setIsLiking] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeChecked, setLikeChecked] = useState(false);
+
+  // ✅ Sử dụng localStorage để track like status vì không có API check
+  const [currentBlogLiked, setCurrentBlogLiked] = useState(false);
+
+  // ✅ Toast notifications
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
 
   // Thêm state cho user authentication
   const [currentUserID, setCurrentUserID] = useState(null);
@@ -56,6 +63,25 @@ const BlogDetail = () => {
     return !!token;
   };
 
+  // ✅ LocalStorage helpers cho like status
+  const getLikeStatusKey = (blogId) => `blog_liked_${blogId}`;
+
+  const getBlogLikeStatus = (blogId) => {
+    if (!isAuthenticated()) return false;
+    const key = getLikeStatusKey(blogId);
+    return localStorage.getItem(key) === 'true';
+  };
+
+  const setBlogLikeStatus = (blogId, isLiked) => {
+    if (!isAuthenticated()) return;
+    const key = getLikeStatusKey(blogId);
+    if (isLiked) {
+      localStorage.setItem(key, 'true');
+    } else {
+      localStorage.removeItem(key);
+    }
+  };
+
   // Function để lấy thông tin user hiện tại
   const getCurrentUser = async () => {
     const token = localStorage.getItem('token');
@@ -70,7 +96,6 @@ const BlogDetail = () => {
       if (res && res.statusCode === 200) {
         const userData = res.data;
         setCurrentUser(userData);
-        // Thử các field khác nhau có thể chứa user ID
         const userId = userData.id || userData.userID || userData.userId || userData.ID;
         setCurrentUserID(userId);
         console.log('Current user data:', userData);
@@ -91,37 +116,15 @@ const BlogDetail = () => {
     getCurrentUser();
   }, []);
 
-  // Check like status from localStorage or API
-  const checkUserLikeStatus = async () => {
-    if (!isAuthenticated()) {
-      setLikeChecked(true);
-      return;
+  // ✅ Load like status từ localStorage khi có blog
+  useEffect(() => {
+    if (blog && id) {
+      const likedStatus = getBlogLikeStatus(id);
+      setCurrentBlogLiked(likedStatus);
+      console.log('✅ Loaded like status from localStorage:', { blogId: id, isLiked: likedStatus });
     }
-
-    try {
-      // First check localStorage for cached status
-      const cachedLikeStatus = localStorage.getItem(`blog_like_${id}`);
-      if (cachedLikeStatus !== null) {
-        setIsLiked(cachedLikeStatus === 'true');
-        setLikeChecked(true);
-        return;
-      }
-
-      // If no cache, try API call (if endpoint exists)
-      const token = localStorage.getItem('token');
-      const result = await checkLikeStatus(id, token);
-
-      if (result.statusCode === 200) {
-        setIsLiked(result.isLiked || false);
-        // Cache the result
-        localStorage.setItem(`blog_like_${id}`, result.isLiked ? 'true' : 'false');
-      }
-    } catch (error) {
-      console.log('Could not check like status:', error);
-    } finally {
-      setLikeChecked(true);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blog, id]);
 
   // Fetch blog details from API
   useEffect(() => {
@@ -155,9 +158,7 @@ const BlogDetail = () => {
 
     if (id) {
       fetchBlogDetail();
-      checkUserLikeStatus();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // Fetch comments
@@ -221,12 +222,10 @@ const BlogDetail = () => {
   const formatBlogContent = (content) => {
     if (!content) return 'Nội dung bài viết đang được cập nhật...';
 
-    // Nếu content đã có HTML tags, render trực tiếp
     if (content.includes('<') && content.includes('>')) {
       return content;
     }
 
-    // Nếu là plain text, format thành HTML với line breaks
     return content
       .split('\n')
       .filter(line => line.trim())
@@ -249,55 +248,114 @@ const BlogDetail = () => {
     }
   };
 
-  // Handle like/dislike
+  // ✅ Handle like/dislike với localStorage tracking - FIXED LOGIC
   const handleLikeBlog = async () => {
     if (!isAuthenticated()) {
-      alert('Vui lòng đăng nhập để thích bài viết');
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
       return;
     }
 
     if (isLiking) return;
 
     setIsLiking(true);
+
+    console.log('=== LIKE ACTION START ===');
+    console.log('Current liked status:', currentBlogLiked ? '🔴 LIKED' : '⚪ NOT LIKED');
+
+    // Optimistic update - đảo ngược trạng thái hiện tại
+    const oldStatus = currentBlogLiked;
+    const newLikedStatus = !currentBlogLiked;
+    setCurrentBlogLiked(newLikedStatus);
+    setBlogLikeStatus(id, newLikedStatus);
+
     try {
       const token = localStorage.getItem('token');
+      console.log('🔄 Calling likeBlog API...');
+
       const result = await likeBlog(id, token);
+      console.log('🔄 likeBlog API result:', result);
 
-      if (result.statusCode === 200) {
-        // Toggle like state
-        const newLikeStatus = !isLiked;
-        setIsLiked(newLikeStatus);
+      if (result && result.statusCode === 200) {
+        const message = result.message || '';
+        let finalLikeStatus;
+        let toastMsg;
 
-        // Cache the new status
-        localStorage.setItem(`blog_like_${id}`, newLikeStatus ? 'true' : 'false');
-
-        // Update blog data to reflect new like count
-        const blogRes = await getBlogDetail(id);
-        if (blogRes.statusCode === 200) {
-          setBlog(blogRes.data);
+        // ✅ FIXED: Kiểm tra chính xác message từ API
+        if (message.toLowerCase().includes('like') && message.toLowerCase().includes('success') && !message.toLowerCase().includes('dislike')) {
+          // API trả về "Like Blog Success" => User vừa like => Button màu đỏ
+          finalLikeStatus = true;
+          toastMsg = "Đã thích bài viết!";
+          console.log('🔴 API SUCCESS: LIKED - Button will be RED');
+        } else if (message.toLowerCase().includes('dislike') && message.toLowerCase().includes('success')) {
+          // API trả về "Dislike blog success" => User vừa dislike => Button màu xám
+          finalLikeStatus = false;
+          toastMsg = "Đã bỏ thích bài viết!";
+          console.log('⚪ API SUCCESS: DISLIKED - Button will be GRAY');
+        } else {
+          // Fallback: giữ nguyên optimistic update
+          finalLikeStatus = newLikedStatus;
+          toastMsg = newLikedStatus ? "Đã thích bài viết!" : "Đã bỏ thích bài viết!";
+          console.log('⚠️ FALLBACK - Using optimistic update:', finalLikeStatus ? 'RED' : 'GRAY');
         }
 
-        console.log(result.message || 'Đã cập nhật trạng thái thích');
+        // Cập nhật state và localStorage cuối cùng
+        setCurrentBlogLiked(finalLikeStatus);
+        setBlogLikeStatus(id, finalLikeStatus);
+
+        // Hiển thị thông báo
+        setToastMessage(toastMsg);
+        setToastType("success");
+        setShowToast(true);
+
+        // Refresh blog data để cập nhật like count
+        try {
+          const blogRes = await getBlogDetail(id);
+          if (blogRes.statusCode === 200) {
+            setBlog(blogRes.data);
+          }
+        } catch (refreshError) {
+          console.log('⚠️ Could not refresh blog data:', refreshError);
+        }
+
+        console.log('✅ FINAL STATUS:', finalLikeStatus ? '🔴 LIKED (RED)' : '⚪ NOT LIKED (GRAY)');
+
       } else {
-        alert(result.message || 'Không thể thực hiện hành động này');
+        // API thất bại - rollback về trạng thái cũ
+        setCurrentBlogLiked(oldStatus);
+        setBlogLikeStatus(id, oldStatus);
+        setToastMessage(result?.message || 'Không thể thực hiện hành động này');
+        setToastType("danger");
+        setShowToast(true);
+        console.log('❌ API FAILED - Rollback to:', oldStatus ? 'RED' : 'GRAY');
       }
     } catch (error) {
-      console.error('Error liking blog:', error);
-      alert('Có lỗi xảy ra khi thích bài viết');
+      console.error('❌ API ERROR:', error);
+      // Rollback về trạng thái cũ
+      setCurrentBlogLiked(oldStatus);
+      setBlogLikeStatus(id, oldStatus);
+      setToastMessage('Có lỗi xảy ra khi thích bài viết');
+      setToastType("danger");
+      setShowToast(true);
+      console.log('❌ ERROR - Rollback to:', oldStatus ? 'RED' : 'GRAY');
     } finally {
       setIsLiking(false);
+      console.log('=== LIKE ACTION END ===');
     }
   };
 
   // Handle comment submission
   const handleSubmitComment = async () => {
     if (!isAuthenticated()) {
-      alert('Vui lòng đăng nhập để bình luận');
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
       return;
     }
 
     if (!commentContent.trim() || commentContent === '<p><br></p>') {
-      alert('Vui lòng nhập nội dung bình luận');
+      setToastMessage('Vui lòng nhập nội dung bình luận');
+      setToastType("warning");
+      setShowToast(true);
       return;
     }
 
@@ -312,16 +370,22 @@ const BlogDetail = () => {
       const result = await createComment(commentData, token);
 
       if (result.statusCode === 200) {
-        alert('Bình luận thành công!');
+        setToastMessage('Bình luận thành công!');
+        setToastType("success");
+        setShowToast(true);
         setCommentContent('');
         setShowCommentModal(false);
         await refreshData();
       } else {
-        alert(result.message || 'Không thể gửi bình luận');
+        setToastMessage(result.message || 'Không thể gửi bình luận');
+        setToastType("danger");
+        setShowToast(true);
       }
     } catch (error) {
       console.error('Error submitting comment:', error);
-      alert('Có lỗi xảy ra khi gửi bình luận');
+      setToastMessage('Có lỗi xảy ra khi gửi bình luận');
+      setToastType("danger");
+      setShowToast(true);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -330,7 +394,9 @@ const BlogDetail = () => {
   // Handle edit comment
   const handleEditComment = async (commentId, newContent) => {
     if (!newContent.trim() || newContent === '<p><br></p>') {
-      alert('Vui lòng nhập nội dung bình luận');
+      setToastMessage('Vui lòng nhập nội dung bình luận');
+      setToastType("warning");
+      setShowToast(true);
       return;
     }
 
@@ -339,17 +405,23 @@ const BlogDetail = () => {
       const result = await editComment(commentId, { content: newContent }, token);
 
       if (result.statusCode === 200) {
-        alert('Cập nhật bình luận thành công!');
+        setToastMessage('Cập nhật bình luận thành công!');
+        setToastType("success");
+        setShowToast(true);
         const commentsRes = await getComments({ blogId: id });
         if (commentsRes.statusCode === 200) {
           setComments(commentsRes.data.items || []);
         }
       } else {
-        alert(result.message || 'Không thể cập nhật bình luận');
+        setToastMessage(result.message || 'Không thể cập nhật bình luận');
+        setToastType("danger");
+        setShowToast(true);
       }
     } catch (error) {
       console.error('Error editing comment:', error);
-      alert('Có lỗi xảy ra khi cập nhật bình luận');
+      setToastMessage('Có lỗi xảy ra khi cập nhật bình luận');
+      setToastType("danger");
+      setShowToast(true);
     }
   };
 
@@ -361,14 +433,20 @@ const BlogDetail = () => {
         const result = await deleteComment(commentId, token);
 
         if (result.statusCode === 200) {
-          alert('Xóa bình luận thành công!');
+          setToastMessage('Xóa bình luận thành công!');
+          setToastType("success");
+          setShowToast(true);
           await refreshData();
         } else {
-          alert(result.message || 'Không thể xóa bình luận');
+          setToastMessage(result.message || 'Không thể xóa bình luận');
+          setToastType("danger");
+          setShowToast(true);
         }
       } catch (error) {
         console.error('Error deleting comment:', error);
-        alert('Có lỗi xảy ra khi xóa bình luận');
+        setToastMessage('Có lỗi xảy ra khi xóa bình luận');
+        setToastType("danger");
+        setShowToast(true);
       }
     }
   };
@@ -376,12 +454,15 @@ const BlogDetail = () => {
   // Handle reply submission
   const handleSubmitReply = async (commentId) => {
     if (!isAuthenticated()) {
-      alert('Vui lòng đăng nhập để phản hồi');
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
       return;
     }
 
     if (!replyContent.trim() || replyContent === '<p><br></p>') {
-      alert('Vui lòng nhập nội dung phản hồi');
+      setToastMessage('Vui lòng nhập nội dung phản hồi');
+      setToastType("warning");
+      setShowToast(true);
       return;
     }
 
@@ -395,7 +476,9 @@ const BlogDetail = () => {
       const result = await createReply(replyData, token);
 
       if (result.statusCode === 200) {
-        alert('Phản hồi thành công!');
+        setToastMessage('Phản hồi thành công!');
+        setToastType("success");
+        setShowToast(true);
         setReplyingTo(null);
         setReplyContent('');
 
@@ -404,11 +487,15 @@ const BlogDetail = () => {
           setComments(commentsRes.data.items || []);
         }
       } else {
-        alert(result.message || 'Không thể gửi phản hồi');
+        setToastMessage(result.message || 'Không thể gửi phản hồi');
+        setToastType("danger");
+        setShowToast(true);
       }
     } catch (error) {
       console.error('Error submitting reply:', error);
-      alert('Có lỗi xảy ra khi gửi phản hồi');
+      setToastMessage('Có lỗi xảy ra khi gửi phản hồi');
+      setToastType("danger");
+      setShowToast(true);
     }
   };
 
@@ -489,6 +576,11 @@ const BlogDetail = () => {
   const blogFallback = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%2384B4C8'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='32' fill='white' text-anchor='middle' dy='0.3em'%3EBlog Image%3C/text%3E%3C/svg%3E";
 
   const relatedFallback = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='180' viewBox='0 0 400 180'%3E%3Crect width='400' height='180' fill='%2384B4C8'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='16' fill='white' text-anchor='middle' dy='0.3em'%3EBlog Image%3C/text%3E%3C/svg%3E";
+
+  console.log('🎯 RENDER - Button status:', {
+    currentBlogLiked: currentBlogLiked ? '🔴 TRUE (RED)' : '⚫ FALSE (GRAY)',
+    variant: currentBlogLiked ? "danger" : "secondary"
+  });
 
   return (
     <div style={{ paddingTop: "100px", minHeight: "100vh" }}>
@@ -597,7 +689,7 @@ const BlogDetail = () => {
                 }}
               />
 
-              {/* Content - Sử dụng dangerouslySetInnerHTML để render HTML */}
+              {/* Content */}
               <div
                 className="blog-content"
                 style={{
@@ -611,10 +703,10 @@ const BlogDetail = () => {
                 }}
               />
 
-              {/* Like Button Only */}
+              {/* ✅ Like Button - Đỏ khi liked, xám khi không liked */}
               <div className="d-flex justify-content-center mt-4 mb-4">
                 <Button
-                  variant={isLiked ? "danger" : "outline-danger"}
+                  variant={currentBlogLiked ? "danger" : "secondary"}
                   size="lg"
                   style={{
                     borderRadius: "30px",
@@ -624,16 +716,16 @@ const BlogDetail = () => {
                     fontSize: "1.1rem"
                   }}
                   onClick={handleLikeBlog}
-                  disabled={isLiking || !likeChecked}
+                  disabled={isLiking}
                 >
                   {isLiking ? (
                     <Spinner animation="border" size="sm" className="me-2" />
                   ) : (
                     <>
-                      {isLiked ? <HeartFill className="me-2" /> : <Heart className="me-2" />}
+                      {currentBlogLiked ? <HeartFill className="me-2" /> : <Heart className="me-2" />}
                     </>
                   )}
-                  {isLiked ? 'Đã thích' : 'Thích bài viết'} ({blog.totalLike})
+                  {currentBlogLiked ? 'Đã thích' : 'Thích bài viết'} ({blog.totalLike})
                 </Button>
               </div>
 
@@ -643,7 +735,8 @@ const BlogDetail = () => {
                 commentsLoading={commentsLoading}
                 onOpenCommentForm={() => {
                   if (!isAuthenticated()) {
-                    alert('Vui lòng đăng nhập để bình luận');
+                    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+                    navigate('/login');
                     return;
                   }
                   setShowCommentModal(true);
@@ -690,33 +783,36 @@ const BlogDetail = () => {
             <Row>
               {relatedBlogs.map((relatedBlog) => (
                 <Col lg={4} md={6} className="mb-4" key={relatedBlog.id}>
-                  <Link
-                    to={`/blog/${relatedBlog.id}`}
-                    style={{ textDecoration: "none", color: "inherit" }}
+                  <Card
+                    className="h-100"
+                    style={{
+                      borderRadius: "15px",
+                      overflow: "hidden",
+                      border: "none",
+                      boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+                      transition: "all 0.3s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-5px)";
+                      e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.15)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 5px 15px rgba(0,0,0,0.08)";
+                    }}
                   >
-                    <Card
-                      className="h-100"
-                      style={{
-                        borderRadius: "15px",
-                        overflow: "hidden",
-                        border: "none",
-                        boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
-                        transition: "all 0.3s ease"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-5px)";
-                        e.currentTarget.style.boxShadow = "0 10px 25px rgba(0,0,0,0.15)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 5px 15px rgba(0,0,0,0.08)";
-                      }}
-                    >
+                    <div className="position-relative">
                       <BlogImage
                         src={relatedBlog.image || relatedFallback}
                         alt={relatedBlog.title}
-                        style={{ height: "180px", objectFit: "cover" }}
+                        style={{ height: "180px", objectFit: "cover", width: "100%" }}
                       />
+                    </div>
+
+                    <Link
+                      to={`/blog/${relatedBlog.id}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
                       <Card.Body className="p-3">
                         <Card.Title
                           className="fw-bold mb-2"
@@ -736,23 +832,13 @@ const BlogDetail = () => {
                             <Person size={12} className="me-1" />
                             {relatedBlog.author}
                           </span>
-                          <div className="d-flex gap-2">
-                            <span>
-                              <Heart size={12} className="me-1" />
-                              {relatedBlog.totalLike}
-                            </span>
-                            <span>
-                              <ChatDots size={12} className="me-1" />
-                              {relatedBlog.totalComment}
-                            </span>
-                          </div>
                         </div>
                         <small className="text-muted">
                           {formatDate(relatedBlog.publishDate)}
                         </small>
                       </Card.Body>
-                    </Card>
-                  </Link>
+                    </Link>
+                  </Card>
                 </Col>
               ))}
             </Row>
@@ -771,6 +857,19 @@ const BlogDetail = () => {
         quillModules={quillModules}
         quillFormats={quillFormats}
       />
+
+      {/* Toast notifications */}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={3000}
+          autohide
+          bg={toastType}
+        >
+          <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 };

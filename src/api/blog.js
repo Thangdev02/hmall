@@ -107,20 +107,7 @@ export async function likeBlog(blogID, token) {
 }
 
 // Check if user liked blog (you may need to add this endpoint to your API)
-export async function checkLikeStatus(blogID, token) {
-    try {
-        const res = await fetch(`${BASE_URL}/api/v1/likes/check?blogID=${blogID}`, {
-            headers: {
-                ...(token && { Authorization: `Bearer ${token}` }),
-            },
-        });
-        return res.json();
-    // eslint-disable-next-line no-unused-vars
-    } catch (error) {
-        // If endpoint doesn't exist, return default
-        return { statusCode: 404, isLiked: false };
-    }
-}
+
 
 // ...existing code...
 

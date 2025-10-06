@@ -612,41 +612,7 @@ const Blog = () => {
                 )}
 
                 {/* Newsletter Subscription */}
-                <section
-                    className="text-center text-white mt-5"
-                    style={{
-                        background: "linear-gradient(135deg, #84B4C8 0%, #B2D9EA 100%)",
-                        margin: "80px -15px 0",
-                        padding: "60px 15px",
-                        borderRadius: "20px",
-                    }}
-                >
-                    <Container>
-                        <Row>
-                            <Col lg={8} className="mx-auto">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h3 className="fw-bold mb-3">Đăng Ký Nhận Tin Mới</h3>
-                                    <p className="mb-4">Nhận thông báo về những bài viết mới nhất và tips handmade hữu ích</p>
-                                    <Row className="justify-content-center">
-                                        <Col md={6}>
-                                            <div className="d-flex gap-2">
-                                                <Form.Control type="email" placeholder="Nhập email của bạn" style={{ borderRadius: "25px" }} />
-                                                <Button variant="light" style={{ borderRadius: "25px", color: "#84B4C8", fontWeight: "bold" }}>
-                                                    Đăng ký
-                                                </Button>
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                </motion.div>
-                            </Col>
-                        </Row>
-                    </Container>
-                </section>
+
             </Container>
 
             {/* Modal tạo bài viết mới */}
