@@ -122,6 +122,7 @@ const RegisterShop = () => {
             } else {
                 setError(res.message || "Đăng ký shop thất bại!");
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError("Có lỗi xảy ra. Vui lòng thử lại!");
         } finally {
