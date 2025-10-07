@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Container, Row, Col, Card, Form, Button, Alert } from "react-bootstrap"
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from "react-bootstrap"
 import { motion } from "framer-motion"
 import { GeoAlt, Telephone, Envelope, Clock, Send } from "react-bootstrap-icons"
+import emailjs from '@emailjs/browser'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,14 @@ const Contact = () => {
     message: "",
   })
   const [showAlert, setShowAlert] = useState(false)
+  const [alertType, setAlertType] = useState("success")
+  const [alertMessage, setAlertMessage] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // ✅ EmailJS configuration
+  const EMAILJS_SERVICE_ID = "service_3ejcq7l"
+  const EMAILJS_TEMPLATE_ID = "template_upfzyeo"
+  const EMAILJS_PUBLIC_KEY = "2lJQor5nLTW6HuCBb"
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -22,19 +31,76 @@ const Contact = () => {
     }))
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // Handle form submission here
-    console.log("Form submitted:", formData)
+  const showNotification = (type, message) => {
+    setAlertType(type)
+    setAlertMessage(message)
     setShowAlert(true)
     setTimeout(() => setShowAlert(false), 5000)
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    })
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    // Validate form
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      showNotification("danger", "Vui lòng điền đầy đủ các trường bắt buộc!")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      console.log("📤 Sending email with data:", formData)
+
+      // ✅ Prepare template parameters matching your EmailJS template
+      const templateParams = {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim() || "Tin nhắn từ website",
+        message: formData.message.trim(),
+        to_name: "Quản trị viên", // Optional: recipient name
+      }
+
+      // ✅ Send email using EmailJS
+      const result = await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        templateParams,
+        EMAILJS_PUBLIC_KEY
+      )
+
+      console.log("✅ Email sent successfully:", result)
+
+      // Show success message
+      showNotification(
+        "success",
+        "Cảm ơn bạn! Tin nhắn của bạn đã được gửi thành công. Chúng tôi sẽ phản hồi sớm nhất có thể."
+      )
+
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+      })
+
+    } catch (error) {
+      console.error("❌ Failed to send email:", error)
+
+      let errorMessage = "Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau."
+
+      // Handle specific EmailJS errors
+      if (error?.text) {
+        errorMessage = `Lỗi: ${error.text}`
+      } else if (error?.message) {
+        errorMessage = `Lỗi: ${error.message}`
+      }
+
+      showNotification("danger", errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -42,27 +108,26 @@ const Contact = () => {
       <Container>
         {/* Page Header */}
         <section className="banner-section contact-banner">
-  <div className="banner-overlay"></div>
-  <Container className="h-100">
-    <Row className="h-100 align-items-center justify-content-center text-center">
-      <Col>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className="display-4 fw-bold mb-3 text-white">
-            Liên Hệ Với Chúng Tôi
-          </h1>
-          <p className="lead text-light">
-            Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn
-          </p>
-        </motion.div>
-      </Col>
-    </Row>
-  </Container>
-</section>
-
+          <div className="banner-overlay"></div>
+          <Container className="h-100">
+            <Row className="h-100 align-items-center justify-content-center text-center">
+              <Col>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <h1 className="display-4 fw-bold mb-3 text-white">
+                    Liên Hệ Với Chúng Tôi
+                  </h1>
+                  <p className="lead text-light">
+                    Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn
+                  </p>
+                </motion.div>
+              </Col>
+            </Row>
+          </Container>
+        </section>
 
         <Row>
           {/* Contact Information */}
@@ -179,10 +244,13 @@ const Contact = () => {
                     Gửi Tin Nhắn
                   </h3>
 
+                  {/* ✅ Enhanced Alert with different types */}
                   {showAlert && (
-                    <Alert variant="success" className="mb-4">
-                      <strong>Cảm ơn bạn!</strong> Tin nhắn của bạn đã được gửi thành công. Chúng tôi sẽ phản hồi sớm
-                      nhất có thể.
+                    <Alert variant={alertType} className="mb-4">
+                      <strong>
+                        {alertType === "success" ? "Thành công!" : "Thông báo!"}
+                      </strong>{" "}
+                      {alertMessage}
                     </Alert>
                   )}
 
@@ -197,6 +265,7 @@ const Contact = () => {
                             value={formData.name}
                             onChange={handleInputChange}
                             required
+                            disabled={isSubmitting}
                             style={{ borderRadius: "10px", padding: "12px" }}
                             placeholder="Nhập họ và tên của bạn"
                           />
@@ -211,6 +280,7 @@ const Contact = () => {
                             value={formData.email}
                             onChange={handleInputChange}
                             required
+                            disabled={isSubmitting}
                             style={{ borderRadius: "10px", padding: "12px" }}
                             placeholder="Nhập địa chỉ email"
                           />
@@ -225,6 +295,7 @@ const Contact = () => {
                         name="subject"
                         value={formData.subject}
                         onChange={handleInputChange}
+                        disabled={isSubmitting}
                         style={{ borderRadius: "10px", padding: "12px" }}
                         placeholder="Chủ đề tin nhắn"
                       />
@@ -239,14 +310,41 @@ const Contact = () => {
                         value={formData.message}
                         onChange={handleInputChange}
                         required
+                        disabled={isSubmitting}
                         style={{ borderRadius: "10px", padding: "12px" }}
                         placeholder="Nhập nội dung tin nhắn của bạn..."
                       />
                     </Form.Group>
 
-                    <Button type="submit" className="btn-primary-custom" size="lg">
-                      <Send className="me-2" />
-                      Gửi Tin Nhắn
+                    {/* ✅ Enhanced Submit Button with loading state */}
+                    <Button
+                      type="submit"
+                      className="btn-primary-custom"
+                      size="lg"
+                      disabled={isSubmitting}
+                      style={{
+                        background: isSubmitting
+                          ? "linear-gradient(135deg, #6c757d 0%, #495057 100%)"
+                          : "linear-gradient(135deg, #84B4C8 0%, #B2D9EA 100%)",
+                        border: "none",
+                        borderRadius: "25px",
+                        padding: "12px 30px",
+                        fontWeight: "600",
+                        color: "white",
+                        transition: "all 0.3s ease"
+                      }}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner animation="border" size="sm" className="me-2" />
+                          Đang gửi...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="me-2" />
+                          Gửi Tin Nhắn
+                        </>
+                      )}
                     </Button>
                   </Form>
                 </Card.Body>
@@ -275,8 +373,15 @@ const Contact = () => {
                     color: "white",
                   }}
                 >
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3874.5822934100897!2d109.21658616159056!3d13.804035936537336!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x316f6bf778c80973%3A0x8a7d0b5aa0af29c7!2zxJDhuqFpIGjhu41jIEZQVCBRdXkgTmjGoW4!5e0!3m2!1svi!2s!4v1758140892285!5m2!1svi!2s" style={{width: "100%", height: "100%", border: "none"}} allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                  </div>
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3874.5822934100897!2d109.21658616159056!3d13.804035936537336!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x316f6bf778c80973%3A0x8a7d0b5aa0af29c7!2zxJDhuqFpIGjhu41jIEZQVCBRdXkgTmjGoW4!5e0!3m2!1svi!2s!4v1758140892285!5m2!1svi!2s"
+                    style={{ width: "100%", height: "100%", border: "none" }}
+                    allowFullScreen=""
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Bản đồ Đại học FPT Quy Nhơn"
+                  />
+                </div>
               </Card>
             </motion.div>
           </Col>

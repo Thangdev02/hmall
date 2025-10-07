@@ -22,6 +22,8 @@ const Cart = () => {
     });
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
+    // ✅ Thêm state cho validation errors
+    const [formErrors, setFormErrors] = useState({});
     const token = localStorage.getItem("token");
 
     // Lấy giỏ hàng từ API
@@ -58,6 +60,34 @@ const Cart = () => {
         setTotalAmounts(apiCart?.totalAmounts || 0);
     };
 
+    // ✅ Validation functions
+    const validatePhone = (phone) => {
+        const phoneRegex = /^[0-9]{10}$/;
+        return phoneRegex.test(phone);
+    };
+
+    const validateForm = () => {
+        const errors = {};
+        const { receiverName, deliveryAddress, receiverPhone } = checkoutForm;
+
+        if (!receiverName.trim()) {
+            errors.receiverName = "Vui lòng nhập tên người nhận";
+        }
+
+        if (!deliveryAddress.trim()) {
+            errors.deliveryAddress = "Vui lòng nhập địa chỉ giao hàng";
+        }
+
+        if (!receiverPhone.trim()) {
+            errors.receiverPhone = "Vui lòng nhập số điện thoại";
+        } else if (!validatePhone(receiverPhone)) {
+            errors.receiverPhone = "Số điện thoại phải có đúng 10 chữ số";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
     // Xử lý mở modal thanh toán
     const handleShowCheckoutModal = () => {
         if (!token) {
@@ -71,18 +101,20 @@ const Cart = () => {
             receiverPhone: "",
             paymentMethod: "Direct"
         });
+        setFormErrors({}); // Reset errors
         setShowCheckoutModal(true);
     };
 
     // Xử lý submit form thanh toán
     const handleCheckoutSubmit = async () => {
-        const { receiverName, deliveryAddress, receiverPhone, paymentMethod } = checkoutForm;
-        if (!receiverName || !deliveryAddress || !receiverPhone) {
-            setToastMessage("Vui lòng điền đầy đủ thông tin!");
+        // ✅ Validate form trước khi submit
+        if (!validateForm()) {
+            setToastMessage("Vui lòng điền đầy đủ và chính xác thông tin!");
             setShowToast(true);
             return;
         }
 
+        const { receiverName, deliveryAddress, receiverPhone, paymentMethod } = checkoutForm;
         const cartItemIDs = cartItems.map(item => item.cartItemID);
         const orderData = {
             receiverName,
@@ -157,10 +189,28 @@ const Cart = () => {
         }
     };
 
-    // Xử lý thay đổi form thanh toán
+    // ✅ Xử lý thay đổi form thanh toán với validation
     const handleFormChange = (e) => {
         const { name, value } = e.target;
-        setCheckoutForm(prev => ({ ...prev, [name]: value }));
+
+        // ✅ Xử lý riêng cho số điện thoại
+        if (name === "receiverPhone") {
+            // Chỉ cho phép nhập số và tối đa 10 ký tự
+            const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+            setCheckoutForm(prev => ({ ...prev, [name]: numericValue }));
+
+            // Clear error khi user đang nhập
+            if (formErrors[name]) {
+                setFormErrors(prev => ({ ...prev, [name]: "" }));
+            }
+        } else {
+            setCheckoutForm(prev => ({ ...prev, [name]: value }));
+
+            // Clear error khi user đang nhập
+            if (formErrors[name]) {
+                setFormErrors(prev => ({ ...prev, [name]: "" }));
+            }
+        }
     };
 
     return (
@@ -227,8 +277,13 @@ const Cart = () => {
                                 value={checkoutForm.receiverName}
                                 onChange={handleFormChange}
                                 placeholder="Nhập tên người nhận"
+                                isInvalid={!!formErrors.receiverName}
                             />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.receiverName}
+                            </Form.Control.Feedback>
                         </Form.Group>
+
                         <Form.Group className="mb-3">
                             <Form.Label>Địa chỉ giao hàng</Form.Label>
                             <Form.Control
@@ -237,8 +292,13 @@ const Cart = () => {
                                 value={checkoutForm.deliveryAddress}
                                 onChange={handleFormChange}
                                 placeholder="Nhập địa chỉ giao hàng"
+                                isInvalid={!!formErrors.deliveryAddress}
                             />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.deliveryAddress}
+                            </Form.Control.Feedback>
                         </Form.Group>
+
                         <Form.Group className="mb-3">
                             <Form.Label>Số điện thoại</Form.Label>
                             <Form.Control
@@ -246,9 +306,19 @@ const Cart = () => {
                                 name="receiverPhone"
                                 value={checkoutForm.receiverPhone}
                                 onChange={handleFormChange}
-                                placeholder="Nhập số điện thoại"
+                                placeholder="Nhập số điện thoại (10 chữ số)"
+                                maxLength={10}
+                                isInvalid={!!formErrors.receiverPhone}
                             />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.receiverPhone}
+                            </Form.Control.Feedback>
+                            {/* ✅ Hiển thị trạng thái nhập số điện thoại */}
+                            <Form.Text className="text-muted">
+                                {checkoutForm.receiverPhone.length}/10 chữ số
+                            </Form.Text>
                         </Form.Group>
+
                         <Form.Group className="mb-3">
                             <Form.Label>Phương thức thanh toán</Form.Label>
                             <Form.Select

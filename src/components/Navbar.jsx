@@ -148,6 +148,15 @@ const NavigationBar = () => {
                 >
                   <Gear className="me-2" /> Cài đặt
                 </NavDropdown.Item>
+                <NavDropdown.Item
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate("/my-blogs");
+                  }}
+                >
+                  <Journal className="me-2" /> Quản lý blog
+                </NavDropdown.Item>
+
                 <NavDropdown.Divider />
                 <NavDropdown.Item
                   onClick={(e) => {

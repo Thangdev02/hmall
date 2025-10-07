@@ -44,17 +44,18 @@ export default function AdminLayout() {
         >
           <Box className="me-2" /> {!collapsed && "Products"}
         </NavLink>
-        <NavLink
-          to="/admin/posts"
-          className="mb-3 text-white text-decoration-none d-flex align-items-center"
-        >
-          <FileText className="me-2" /> {!collapsed && "Posts"}
-        </NavLink>
+
         <NavLink
           to="/admin/users"
           className="mb-3 text-white text-decoration-none d-flex align-items-center"
         >
           <People className="me-2" /> {!collapsed && "Users"}
+        </NavLink>
+        <NavLink
+          to="/admin/blogs"
+          className="mb-3 text-white text-decoration-none d-flex align-items-center"
+        >
+          <FileText className="me-2" /> {!collapsed && "Blogs"}
         </NavLink>
         <NavLink
           to="/admin/shops"

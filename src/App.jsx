@@ -33,6 +33,9 @@ import ProductsShop from "./pages/ProductsInShop/ProductsShop";
 import OrderShop from "./pages/OrderShop/OrderShop";
 import UsersManagement from "./pages/Admin/UsersManagement";
 import ShopsManagement from "./pages/Admin/ShopsManagement";
+import BlogManagementUser from "./components/Profile/BlogManagement";
+import ShopBlogManager from "./components/ShopBlogManager";
+import AdminBlogManager from "./components/AdminBlogManager";
 
 // Dummy shop pages
 
@@ -72,6 +75,7 @@ const AppContent = () => {
           <Route path="posts" element={<PostsManager />} />
           <Route path="users" element={<UsersManagement />} />
           <Route path="shops" element={<ShopsManagement />} />
+          <Route path="blogs" element={<AdminBlogManager />} />
         </Route>
       </Routes>
     );
@@ -86,6 +90,7 @@ const AppContent = () => {
           <Route path="/shop/orders" element={<OrderShop />} />
           <Route path="/shop/products" element={<ShopProducts />} />
           <Route path="/shop/profile" element={<ShopProfile />} />
+          <Route path="/shop/blog" element={<ShopBlogManager />} />
         </Routes>
       </ShopLayout>
     );
@@ -153,6 +158,14 @@ const AppContent = () => {
               <PageTransition>
                 <Cart />
               </PageTransition>
+            }
+          />
+          <Route
+            path="/my-blogs"
+            element={
+
+              <BlogManagementUser />
+
             }
           />
           <Route

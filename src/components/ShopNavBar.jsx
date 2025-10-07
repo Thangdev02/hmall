@@ -67,6 +67,8 @@ const ShopNavBar = () => {
                 <li><Link to="/shop/orders" style={styles.link}>Đơn hàng</Link></li>
                 <li><Link to="/shop/products" style={styles.link}>Sản phẩm</Link></li>
                 <li><Link to="/shop/profile" style={styles.link}>Tài khoản</Link></li>
+                <li><Link to="/shop/blog" style={styles.link}>Blog</Link></li>
+
             </ul>
             <button style={styles.logoutBtn} onClick={handleLogout} title="Đăng xuất">
                 Đăng xuất
