@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Form, Row, Col, Badge, Spinner, Alert, Image, Modal, Card } from "react-bootstrap";
-import { Eye, ArrowLeft, Envelope, Telephone, GeoAlt, Calendar } from "react-bootstrap-icons";
+import { Eye, Envelope, Telephone, GeoAlt, Calendar } from "react-bootstrap-icons";
 import { getShops } from "../../api/shop";
 import { getShopDetail } from "../../api/shop";
 import { blockUnblockShop } from "../../api/user";
 
 export default function ShopsManagement() {
-    const [shops, setShops] = useState([]);
+    const [allShops, setAllShops] = useState([]); // Lưu toàn bộ dữ liệu từ BE
+    const [shops, setShops] = useState([]); // Danh sách hiển thị sau khi lọc FE
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -18,8 +19,7 @@ export default function ShopsManagement() {
     });
     const [filters, setFilters] = useState({
         search: "",
-        filter: "",
-        IsActive: undefined
+        status: "" // "all" | "active" | "blocked"
     });
 
     // Detail modal states
@@ -29,6 +29,7 @@ export default function ShopsManagement() {
 
     const token = localStorage.getItem("token");
 
+    // Lấy toàn bộ shops (không truyền IsActive lên BE)
     const fetchShops = async () => {
         setLoading(true);
         try {
@@ -36,12 +37,11 @@ export default function ShopsManagement() {
                 pageNumber: pagination.pageNumber,
                 pageSize: pagination.pageSize,
                 search: filters.search,
-                filter: filters.filter,
-                IsActive: filters.IsActive
+                filter: filters.filter
             }, token);
 
             if (response.statusCode === 200) {
-                setShops(response.data.items || []);
+                setAllShops(response.data.items || []);
                 setPagination(prev => ({
                     ...prev,
                     totalPages: response.data.totalPages || 0,
@@ -51,12 +51,23 @@ export default function ShopsManagement() {
             } else {
                 setError(response.message || "Lỗi khi tải danh sách cửa hàng");
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (err) {
-            console.error("Error:", err);
             setError("Lỗi kết nối server");
         }
         setLoading(false);
     };
+
+    // FE tự lọc theo trạng thái
+    useEffect(() => {
+        let filtered = allShops;
+        if (filters.status === "active") {
+            filtered = allShops.filter(shop => shop.isActive === true);
+        } else if (filters.status === "blocked") {
+            filtered = allShops.filter(shop => shop.isActive === false);
+        }
+        setShops(filtered);
+    }, [allShops, filters.status]);
 
     const fetchShopDetail = async (shopId) => {
         setDetailLoading(true);
@@ -69,8 +80,8 @@ export default function ShopsManagement() {
             } else {
                 setError(response.message || "Lỗi khi tải thông tin chi tiết cửa hàng");
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (err) {
-            console.error("Error:", err);
             setError("Lỗi kết nối server");
         }
         setDetailLoading(false);
@@ -91,15 +102,14 @@ export default function ShopsManagement() {
             if (response.statusCode === 200) {
                 setSuccess("Cập nhật trạng thái cửa hàng thành công");
                 fetchShops();
-                // Nếu đang xem detail, cập nhật luôn
                 if (selectedShop && selectedShop.id === shopId) {
                     setSelectedShop(prev => ({ ...prev, isActive: !prev.isActive }));
                 }
             } else {
                 setError(response.message || "Lỗi khi cập nhật trạng thái cửa hàng");
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (err) {
-            console.error("Error:", err);
             setError("Lỗi kết nối server");
         }
     };
@@ -114,15 +124,14 @@ export default function ShopsManagement() {
     };
 
     const handleStatusFilter = (value) => {
-        const isActive = value === "" ? undefined : value === "true";
-        setFilters(prev => ({ ...prev, IsActive: isActive }));
+        setFilters(prev => ({ ...prev, status: value }));
         setPagination(prev => ({ ...prev, pageNumber: 1 }));
     };
 
     useEffect(() => {
         fetchShops();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pagination.pageNumber, pagination.pageSize, filters.IsActive]);
+        // eslint-disable-next-line
+    }, [pagination.pageNumber, pagination.pageSize, filters.search]);
 
     useEffect(() => {
         if (success) {
@@ -157,12 +166,12 @@ export default function ShopsManagement() {
                 </Col>
                 <Col md={3}>
                     <Form.Select
-                        value={filters.IsActive === undefined ? "" : filters.IsActive.toString()}
+                        value={filters.status}
                         onChange={(e) => handleStatusFilter(e.target.value)}
                     >
                         <option value="">Tất cả trạng thái</option>
-                        <option value="true">Đang hoạt động</option>
-                        <option value="false">Bị khóa</option>
+                        <option value="active">Đang hoạt động</option>
+                        <option value="blocked">Bị khóa</option>
                     </Form.Select>
                 </Col>
                 <Col md={2}>
