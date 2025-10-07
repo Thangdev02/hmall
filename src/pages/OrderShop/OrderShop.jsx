@@ -53,7 +53,6 @@ const OrderShop = () => {
     const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecord, setTotalRecord] = useState(0);
-    const [filter, setFilter] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
     const token = localStorage.getItem('token');
@@ -116,14 +115,13 @@ const OrderShop = () => {
         return grouped;
     };
 
-    // Fetch orders
-    const fetchOrders = async (page = currentPage, filterValue = filter) => {
+    // Fetch orders (không truyền filter/searchTerm lên BE)
+    const fetchOrders = async (page = currentPage) => {
         try {
             setLoading(true);
             const response = await getOrdersByShop({
                 pageNumber: page,
-                pageSize: pageSize,
-                filter: filterValue
+                pageSize: pageSize
             }, token);
 
             if (response.statusCode === 200) {
@@ -243,11 +241,16 @@ const OrderShop = () => {
         setShowCancelModal(true);
     };
 
-    // Handle search
+    // FE filter orders theo searchTerm
+    const filteredOrders = orders.filter(order =>
+        order.orderCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.receiverName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.receiverPhone?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Handle search (chỉ setSearchTerm, không gọi lại API)
     const handleSearch = () => {
-        setFilter(searchTerm);
-        setCurrentPage(1);
-        fetchOrders(1, searchTerm);
+        // Không gọi lại API, chỉ filter FE
     };
 
     // Handle page change
@@ -330,7 +333,7 @@ const OrderShop = () => {
                                 <span className="visually-hidden">Đang tải...</span>
                             </Spinner>
                         </div>
-                    ) : orders.length > 0 ? (
+                    ) : filteredOrders.length > 0 ? (
                         <>
                             <Table striped bordered hover responsive className="mb-0">
                                 <thead>
@@ -345,7 +348,7 @@ const OrderShop = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {orders.map((order) => (
+                                    {filteredOrders.map((order) => (
                                         <tr key={order.orderID}>
                                             <td>
                                                 <div>
@@ -473,8 +476,8 @@ const OrderShop = () => {
                     ) : (
                         <div className="text-center py-5">
                             <BoxSeamFill size={48} className="text-muted mb-3" />
-                            <h5 className="text-muted">Chưa có đơn hàng nào</h5>
-                            <p className="text-muted">Các đơn hàng của shop sẽ hiển thị ở đây</p>
+                            <h5 className="text-muted">Không tìm thấy đơn hàng nào</h5>
+                            <p className="text-muted">Vui lòng thử từ khóa khác</p>
                         </div>
                     )}
                 </Card.Body>

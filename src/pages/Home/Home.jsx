@@ -1,23 +1,25 @@
 import { Container, Row, Col, Button, Card } from "react-bootstrap"
 import { motion, useScroll, useTransform } from "framer-motion"
-import { Swiper, SwiperSlide } from "swiper/react" // Sửa import này
+import { Swiper, SwiperSlide } from "swiper/react"
 import { Navigation, Pagination, Autoplay } from "swiper/modules"
 import { ArrowRight, Star, Heart, Award } from "react-bootstrap-icons"
 import { Link } from "react-router-dom"
-import { useState, useEffect } from "react" // Thêm hooks
-
+import { useState, useEffect } from "react"
+import { getProducts } from "../../api/product"
+import { getShops } from "../../api/shop"
 import "./Home.css"
-
-// Import Swiper styles
 import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/pagination"
-import { getProducts } from "../../api/product" // Import API
 
 const Home = () => {
     // State cho sản phẩm nổi bật
     const [featuredProducts, setFeaturedProducts] = useState([])
     const [loadingProducts, setLoadingProducts] = useState(true)
+
+    // State cho shop
+    const [shops, setShops] = useState([])
+    const [loadingShops, setLoadingShops] = useState(true)
 
     // Scroll parallax cho shapes
     const { scrollY } = useScroll()
@@ -31,37 +33,51 @@ const Home = () => {
             try {
                 setLoadingProducts(true)
                 const response = await getProducts({
-                    pageSize: 20, // Lấy nhiều để có thể sort và chọn top 6
+                    pageSize: 20,
                     pageNumber: 1,
-                    isActive: true // Chỉ lấy sản phẩm còn hàng
+                    isActive: true
                 })
-
                 const products = response?.data?.items || []
-
-                // Sort theo rating cao nhất và lấy top 6
                 const topProducts = products
-                    .filter(product => product.rating && product.rating > 0) // Chỉ lấy sản phẩm có rating
-                    .sort((a, b) => (b.rating || 0) - (a.rating || 0)) // Sort theo rating giảm dần
-                    .slice(0, 6) // Lấy top 6
-
-                // Xử lý hình ảnh
+                    .filter(product => product.rating && product.rating > 0)
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 6)
                 const productsWithImages = topProducts.map(product => ({
                     ...product,
                     image: product.commonImage?.startsWith("http")
                         ? product.commonImage
                         : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${product.commonImage}`
                 }))
-
                 setFeaturedProducts(productsWithImages)
+                // eslint-disable-next-line no-unused-vars
             } catch (error) {
-                console.error("Error fetching featured products:", error)
                 setFeaturedProducts([])
             } finally {
                 setLoadingProducts(false)
             }
         }
-
         fetchFeaturedProducts()
+    }, [])
+
+    // Fetch shops (lấy 6 shop đang hoạt động, chỉ lấy tên và logo)
+    useEffect(() => {
+        const fetchShops = async () => {
+            try {
+                setLoadingShops(true)
+                const response = await getShops({ pageNumber: 1, pageSize: 6, IsActive: true })
+                const shopList = (response?.data?.items || []).map(shop => ({
+                    name: shop.name,
+                    logo: shop.logo || shop.avatar || "/images/shop-placeholder.png"
+                }))
+                setShops(shopList)
+                // eslint-disable-next-line no-unused-vars
+            } catch (error) {
+                setShops([])
+            } finally {
+                setLoadingShops(false)
+            }
+        }
+        fetchShops()
     }, [])
 
     return (
@@ -391,6 +407,7 @@ const Home = () => {
                 </Container>
             </section>
 
+            {/* Các Cửa Hàng Trên Hmall */}
             <section className="section-padding" style={{ backgroundColor: "#ffffff" }}>
                 <Container>
                     <Row className="text-center mb-5">
@@ -403,34 +420,33 @@ const Home = () => {
                             </p>
                         </Col>
                     </Row>
-
-                    <div className="logo-slider">
-                        <div className="logo-track">
-                            {[
-                                { name: "May's House", logo: "https://scontent.fsgn6-2.fna.fbcdn.net/v/t39.30808-6/495027495_1737299460255348_941442336585434906_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHphTSkkZYxCKF3I9Zifc3_WX3uvz9JILZZfe6_P0kgtmuFZa6dnkyA63WvWHzdpt27k9ThuYKLIJ9m0ikLBZ3B&_nc_ohc=-ykK0tXUZXwQ7kNvwHfZbjy&_nc_oc=AdnawMi2nr9o-rpwbl5AP_-2j1fAhiKwRvjh3wcLux9O1Dsl89Cktp0rHXKhwbT7xoI&_nc_zt=23&_nc_ht=scontent.fsgn6-2.fna&_nc_gid=xkHaqSbjQLedsA37W-m8BA&oh=00_AfZweq5nZWMOKcXLoYk8wpIkr_hlc2tTI2dXXn0C07Bd_Q&oe=68D0E919" },
-                                { name: "Little Daisy Handmade", logo: "https://scontent.fsgn6-2.fna.fbcdn.net/v/t39.30808-1/225655040_126918576215004_913598083002304554_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeHoMxChgbvdYP1wtapl4dUkb9xceX606ORv3Fx5frTo5LKNCJpCyQdYnHt7QtA29VMM-8jwW6DgIMacB3kvvES7&_nc_ohc=P9x_CSAn8nEQ7kNvwEM80st&_nc_oc=AdkLQx5rQ9Z42s5IUUQNbC7oGkO1Yv2knI3dWbJJSuUPMZbeHGe9Clv_68R2HnVhTVg&_nc_zt=24&_nc_ht=scontent.fsgn6-2.fna&_nc_gid=niVGs9w4wAgdXa9OlTAHrQ&oh=00_AfbqVkQS2-u4z3OUyVI-XAa-7nQOXb8sOAiPoe4uG66UaA&oe=68D0FA5B" },
-                                { name: "Her Craft", logo: "https://scontent.fsgn6-1.fna.fbcdn.net/v/t39.30808-6/522904321_122148796196716319_2323392279456159065_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGXb7MgPAXVqWuaqmBDOF_pVl7ymuOK5TlWXvKa44rlOVgt3UHgTMo8Dz1-lj69Xq4ae_CZuyND5FwWkgbOaC2V&_nc_ohc=5W605qIJsLUQ7kNvwFwiymw&_nc_oc=AdkpPpDDPTtTJ4tsELmxSgHAl6pzo6Jgs2Aad2oxBgOHriO43IggHsZE2IUHzBLEc-I&_nc_zt=23&_nc_ht=scontent.fsgn6-1.fna&_nc_gid=rONdfH3uOP0U673cR6GLwg&oh=00_AfZ0nZdQQD29e9up5cLrgXSNVylhVxFNNAQz49CSlYjuMw&oe=68D1003C" },
-                                { name: "Vừng Handmade", logo: "https://scontent.fsgn6-2.fna.fbcdn.net/v/t39.30808-6/387043017_6603267993075829_4323439864794366052_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFWlS0yxi16QPBM3fT6P32kg0VGCwIVikCDRUYLAhWKQO5TrrXlHu_MRZCk7DCw36HQGv0-ZAAud9fVnBfNP8lI&_nc_ohc=BK1G_lXH7vUQ7kNvwHwYDZF&_nc_oc=AdkILuDqZysyLXSsPZlDUQ4lncsPQpHRRNUWYhbX9aAXfcxtxts8OYQ9ai3lk6lrwM8&_nc_zt=23&_nc_ht=scontent.fsgn6-2.fna&_nc_gid=QdSNmNlmPybX8RiBBdzA-Q&oh=00_AfasPAwaHwkudCv6f4T5sR2lzVgOuLfNWOsK2AY1-61Glw&oe=68D0DA08" },
-                            ].map((shop, index) => (
-                                <div className="logo-item" key={index}>
-                                    <img src={shop.logo} alt={shop.name} />
-                                    <p>{shop.name}</p>
-                                </div>
-                            ))}
-                            {/* Lặp lại để tạo hiệu ứng vô tận */}
-                            {[
-                                { name: "May's House", logo: "https://scontent.fsgn6-2.fna.fbcdn.net/v/t39.30808-6/495027495_1737299460255348_941442336585434906_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHphTSkkZYxCKF3I9Zifc3_WX3uvz9JILZZfe6_P0kgtmuFZa6dnkyA63WvWHzdpt27k9ThuYKLIJ9m0ikLBZ3B&_nc_ohc=-ykK0tXUZXwQ7kNvwHfZbjy&_nc_oc=AdnawMi2nr9o-rpwbl5AP_-2j1fAhiKwRvjh3wcLux9O1Dsl89Cktp0rHXKhwbT7xoI&_nc_zt=23&_nc_ht=scontent.fsgn6-2.fna&_nc_gid=xkHaqSbjQLedsA37W-m8BA&oh=00_AfZweq5nZWMOKcXLoYk8wpIkr_hlc2tTI2dXXn0C07Bd_Q&oe=68D0E919" },
-                                { name: "Little Daisy Handmade", logo: "https://scontent.fsgn6-2.fna.fbcdn.net/v/t39.30808-1/225655040_126918576215004_913598083002304554_n.jpg?stp=dst-jpg_s480x480_tt6&_nc_cat=100&ccb=1-7&_nc_sid=2d3e12&_nc_eui2=AeHoMxChgbvdYP1wtapl4dUkb9xceX606ORv3Fx5frTo5LKNCJpCyQdYnHt7QtA29VMM-8jwW6DgIMacB3kvvES7&_nc_ohc=P9x_CSAn8nEQ7kNvwEM80st&_nc_oc=AdkLQx5rQ9Z42s5IUUQNbC7oGkO1Yv2knI3dWbJJSuUPMZbeHGe9Clv_68R2HnVhTVg&_nc_zt=24&_nc_ht=scontent.fsgn6-2.fna&_nc_gid=niVGs9w4wAgdXa9OlTAHrQ&oh=00_AfbqVkQS2-u4z3OUyVI-XAa-7nQOXb8sOAiPoe4uG66UaA&oe=68D0FA5B" },
-                                { name: "Her Craft", logo: "https://scontent.fsgn6-1.fna.fbcdn.net/v/t39.30808-6/522904321_122148796196716319_2323392279456159065_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGXb7MgPAXVqWuaqmBDOF_pVl7ymuOK5TlWXvKa44rlOVgt3UHgTMo8Dz1-lj69Xq4ae_CZuyND5FwWkgbOaC2V&_nc_ohc=5W605qIJsLUQ7kNvwFwiymw&_nc_oc=AdkpPpDDPTtTJ4tsELmxSgHAl6pzo6Jgs2Aad2oxBgOHriO43IggHsZE2IUHzBLEc-I&_nc_zt=23&_nc_ht=scontent.fsgn6-1.fna&_nc_gid=rONdfH3uOP0U673cR6GLwg&oh=00_AfZ0nZdQQD29e9up5cLrgXSNVylhVxFNNAQz49CSlYjuMw&oe=68D1003C" },
-                                { name: "Vừng Handmade", logo: "https://scontent.fsgn6-2.fna.fbcdn.net/v/t39.30808-6/387043017_6603267993075829_4323439864794366052_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFWlS0yxi16QPBM3fT6P32kg0VGCwIVikCDRUYLAhWKQO5TrrXlHu_MRZCk7DCw36HQGv0-ZAAud9fVnBfNP8lI&_nc_ohc=BK1G_lXH7vUQ7kNvwHwYDZF&_nc_oc=AdkILuDqZysyLXSsPZlDUQ4lncsPQpHRRNUWYhbX9aAXfcxtxts8OYQ9ai3lk6lrwM8&_nc_zt=23&_nc_ht=scontent.fsgn6-2.fna&_nc_gid=QdSNmNlmPybX8RiBBdzA-Q&oh=00_AfasPAwaHwkudCv6f4T5sR2lzVgOuLfNWOsK2AY1-61Glw&oe=68D0DA08" },
-                            ].map((shop, index) => (
-                                <div className="logo-item" key={`dup-${index}`}>
-                                    <img src={shop.logo} alt={shop.name} />
-                                    <p>{shop.name}</p>
-                                </div>
-                            ))}
+                    {loadingShops ? (
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        <Row className="justify-content-center">
+                            {shops.map((shop, idx) => (
+                                <Col key={idx} xs={6} sm={4} md={2} className="mb-4 text-center">
+                                    <img
+                                        src={shop.logo}
+                                        alt={shop.name}
+                                        style={{
+                                            width: 80,
+                                            height: 80,
+                                            objectFit: "cover",
+                                            borderRadius: "50%",
+                                            border: "2px solid #eee",
+                                            background: "#fafafa"
+                                        }}
+                                    />
+                                    <div className="mt-2 fw-semibold">{shop.name}</div>
+                                </Col>
+                            ))}
+                        </Row>
+                    )}
                 </Container>
             </section>
 

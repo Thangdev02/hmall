@@ -52,8 +52,8 @@ const ProductDetail = () => {
       const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
       const userFavorites = allFavorites[token] || {}
       return Boolean(userFavorites[productId])
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      console.error('Error reading favorites from localStorage:', error)
       return false
     }
   }
@@ -61,35 +61,24 @@ const ProductDetail = () => {
   const setFavoriteStatus = (productId, status) => {
     if (!token || !productId) return
     try {
-      // Lấy tất cả favorites
       const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
-
-      // Đảm bảo có object cho user hiện tại
       if (!allFavorites[token]) {
         allFavorites[token] = {}
       }
-
-      // Cập nhật trạng thái
       if (status) {
         allFavorites[token][productId] = true
       } else {
         delete allFavorites[token][productId]
       }
-
-      // Lưu lại
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(allFavorites))
-      console.log('Saved favorite status:', { productId, status, userFavorites: allFavorites[token] })
-    } catch (error) {
-      console.error('Error saving favorite status to localStorage:', error)
-    }
+      // eslint-disable-next-line no-unused-vars, no-empty
+    } catch (error) { }
   }
 
   // Load trạng thái yêu thích ngay khi component mount
   useEffect(() => {
     if (id && token) {
-      const savedStatus = getFavoriteStatus(id)
-      console.log('Loaded favorite status from localStorage:', { productId: id, status: savedStatus })
-      setIsLiked(savedStatus)
+      setIsLiked(getFavoriteStatus(id))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, token])
@@ -108,17 +97,8 @@ const ProductDetail = () => {
 
         // Kiểm tra trạng thái từ localStorage trước
         const localFavoriteStatus = getFavoriteStatus(id)
-        console.log('Product loaded:', {
-          productId: id,
-          apiFavorite: p?.isFavorite,
-          localFavorite: localFavoriteStatus
-        })
-
-        // Ưu tiên localStorage nếu có, không thì dùng API
         const finalStatus = localFavoriteStatus !== false ? localFavoriteStatus : (p?.isFavorite || false)
         setIsLiked(finalStatus)
-
-        // Sync với localStorage (đảm bảo consistency)
         setFavoriteStatus(id, finalStatus)
 
         const allImages = [
@@ -139,19 +119,6 @@ const ProductDetail = () => {
       .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
-
-  // Debug localStorage khi component mount
-  useEffect(() => {
-    if (token) {
-      try {
-        const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}')
-        console.log('All favorites in localStorage:', allFavorites)
-        console.log('Current user favorites:', allFavorites[token])
-      } catch (error) {
-        console.error('Error reading localStorage:', error)
-      }
-    }
-  }, [token])
 
   // Handle previous/next image navigation
   const handlePreviousImage = () => {
@@ -196,41 +163,28 @@ const ProductDetail = () => {
     }
 
     setFavoriteLoading(true)
-
-    // Lưu trạng thái cũ để rollback nếu API thất bại
     const oldStatus = isLiked
     const newStatus = !isLiked
-
-    console.log('Toggling favorite:', { productId: product.id, oldStatus, newStatus })
-
-    // Cập nhật UI và localStorage ngay lập tức (optimistic update)
     setIsLiked(newStatus)
     setFavoriteStatus(product.id, newStatus)
 
     try {
       const response = await favoriteProduct(product.id, token)
-      console.log('API response:', response)
-
       if (response?.statusCode === 200) {
-        // API thành công, giữ nguyên trạng thái đã cập nhật
         setToastMessage(
           newStatus
             ? "Đã thêm vào danh sách yêu thích!"
             : "Đã bỏ khỏi danh sách yêu thích!"
         )
         setShowToast(true)
-        console.log('Favorite updated successfully')
       } else {
-        // API thất bại, rollback trạng thái
-        console.log('API failed, rolling back')
         setIsLiked(oldStatus)
         setFavoriteStatus(product.id, oldStatus)
         setToastMessage(response?.message || "Có lỗi xảy ra!")
         setShowToast(true)
       }
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      console.error("Error toggling favorite:", error)
-      // API thất bại, rollback trạng thái
       setIsLiked(oldStatus)
       setFavoriteStatus(product.id, oldStatus)
       setToastMessage("Có lỗi xảy ra khi cập nhật yêu thích!")
@@ -310,18 +264,29 @@ const ProductDetail = () => {
     setShowBuyNowModal(true)
   }
 
-  // Xử lý thay đổi form mua ngay
+  // Xử lý thay đổi form mua ngay (chỉ cho nhập số và tối đa 10 số cho receiverPhone)
   const handleBuyNowFormChange = (e) => {
     const { name, value } = e.target
-    setBuyNowForm(prev => ({ ...prev, [name]: value }))
+    if (name === "receiverPhone") {
+      let phone = value.replace(/\D/g, "")
+      if (phone.length > 10) phone = phone.slice(0, 10)
+      setBuyNowForm(prev => ({ ...prev, receiverPhone: phone }))
+    } else {
+      setBuyNowForm(prev => ({ ...prev, [name]: value }))
+    }
   }
 
-  // Xử lý submit mua ngay
+  // Xử lý submit mua ngay (bắt buộc số điện thoại là 10 số)
   const handleBuyNowSubmit = async () => {
     const { receiverName, deliveryAddress, receiverPhone, paymentMethod, note } = buyNowForm
 
     if (!receiverName || !deliveryAddress || !receiverPhone) {
       setToastMessage("Vui lòng điền đầy đủ thông tin!")
+      setShowToast(true)
+      return
+    }
+    if (!/^\d{10}$/.test(receiverPhone)) {
+      setToastMessage("Số điện thoại phải gồm đúng 10 số!")
       setShowToast(true)
       return
     }
@@ -339,36 +304,22 @@ const ProductDetail = () => {
         note
       }
 
-      console.log("Creating fast order with data:", orderData)
       const orderRes = await createFastOrder(orderData, token)
-      console.log("Fast order response:", orderRes)
 
       if (orderRes && orderRes.statusCode === 200) {
-        // Lấy orderID trực tiếp từ data (là string UUID)
         const orderID = orderRes.data
-        console.log("Extracted orderID:", orderID)
 
         if (!orderID) {
-          console.error("OrderID not found in response:", orderRes)
           setToastMessage("Không thể lấy ID đơn hàng!")
           setShowToast(true)
           return
         }
 
         if (paymentMethod === "OnlineBanking") {
-          // Delay để đảm bảo order đã được lưu vào database
           await new Promise(resolve => setTimeout(resolve, 1000))
-
-          // Tạo QR payment với orderID
           try {
-            const qrData = {
-              orderID: orderID // orderID là string UUID
-            }
-
-            console.log("QR Data being sent:", qrData)
+            const qrData = { orderID }
             const qrRes = await createQRPayment(qrData, token)
-            console.log("QR Response:", qrRes)
-
             if (qrRes && qrRes.statusCode === 200) {
               setQrUrl(qrRes.data.qrUrl)
               setShowBuyNowModal(false)
@@ -377,24 +328,26 @@ const ProductDetail = () => {
               setToastMessage(`Lỗi tạo QR: ${qrRes.message || "Không thể tạo mã QR"}`)
               setShowToast(true)
             }
+            // eslint-disable-next-line no-unused-vars
           } catch (error) {
-            console.error("QR creation error:", error)
             setToastMessage("Lỗi khi tạo mã QR thanh toán!")
             setShowToast(true)
           }
         } else {
-          // Thanh toán trực tiếp
           setToastMessage("Đặt hàng thành công!")
           setShowToast(true)
           setShowBuyNowModal(false)
           setCartQuantity(1)
+          setTimeout(() => {
+            navigate('/settings?tab=orders')
+          }, 1500)
         }
       } else {
         setToastMessage(orderRes.message || "Đặt hàng thất bại!")
         setShowToast(true)
       }
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      console.error("Order creation error:", error)
       setToastMessage("Đặt hàng thất bại!")
       setShowToast(true)
     } finally {
@@ -408,10 +361,8 @@ const ProductDetail = () => {
     setToastMessage("Đặt hàng và thanh toán thành công!")
     setShowToast(true)
     setCartQuantity(1)
-
-    // Chuyển đến trang đơn hàng sau 2 giây
     setTimeout(() => {
-      navigate('/orders')
+      navigate('/settings?tab=orders')
     }, 2000)
   }
 
@@ -456,7 +407,6 @@ const ProductDetail = () => {
               {/* Navigation buttons */}
               {product.allImages && product.allImages.length > 1 && (
                 <>
-                  {/* Previous button */}
                   <Button
                     variant="light"
                     className="position-absolute top-50 start-0 translate-middle-y ms-2 rounded-circle shadow"
@@ -470,8 +420,6 @@ const ProductDetail = () => {
                   >
                     <ChevronLeft size={20} />
                   </Button>
-
-                  {/* Next button */}
                   <Button
                     variant="light"
                     className="position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle shadow"
@@ -485,8 +433,6 @@ const ProductDetail = () => {
                   >
                     <ChevronRight size={20} />
                   </Button>
-
-                  {/* Image indicator */}
                   <div
                     className="position-absolute bottom-0 start-50 translate-middle-x mb-3"
                     style={{
@@ -502,8 +448,6 @@ const ProductDetail = () => {
                 </>
               )}
             </motion.div>
-
-            {/* Thumbnail images */}
             <div className="d-flex gap-3 mt-3 flex-wrap">
               {(product.allImages || []).map((img, idx) => (
                 <img
@@ -532,7 +476,7 @@ const ProductDetail = () => {
               <h2 className="fw-bold mb-3">{product.name}</h2>
               <div className="d-flex align-items-center mb-3">
                 <Star fill="#ffc107" color="#ffc107" size={20} />
-                <span className="ms-2 fw-bold">{product.rating || 5}</span>
+                <span className="ms-2 fw-bold">{product.rating}</span>
                 <Badge
                   bg={product.isActive ? "success" : "danger"}
                   className="ms-3"
@@ -548,8 +492,6 @@ const ProductDetail = () => {
                 <li>Danh mục: {product.category}</li>
                 <li>Còn lại: {product.stock} sản phẩm</li>
               </ul>
-
-              {/* Quantity Control */}
               <div className="quantity-control mb-4">
                 <span className="me-3 fw-bold">Số lượng:</span>
                 <Button
@@ -581,8 +523,6 @@ const ProductDetail = () => {
                   +
                 </Button>
               </div>
-
-              {/* Action Buttons */}
               <div className="d-flex gap-3 mt-4 align-items-center flex-wrap">
                 <Button
                   size="lg"
@@ -614,8 +554,6 @@ const ProductDetail = () => {
                   )}
                 </Button>
               </div>
-
-              {/* Button đánh giá */}
               <div className="mt-3">
                 <Button
                   variant="outline-primary"
@@ -656,7 +594,6 @@ const ProductDetail = () => {
           <Modal.Title>Thông tin đặt hàng</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Thông tin sản phẩm */}
           <div className="mb-4 p-3 border rounded bg-light">
             <div className="d-flex align-items-center">
               <img
@@ -674,7 +611,6 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
-
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Tên người nhận *</Form.Label>
@@ -704,6 +640,9 @@ const ProductDetail = () => {
                 value={buyNowForm.receiverPhone}
                 onChange={handleBuyNowFormChange}
                 placeholder="Nhập số điện thoại"
+                maxLength={10}
+                inputMode="numeric"
+                pattern="\d*"
               />
             </Form.Group>
             <Form.Group className="mb-3">

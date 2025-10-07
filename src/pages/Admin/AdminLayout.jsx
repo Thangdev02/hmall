@@ -31,19 +31,8 @@ export default function AdminLayout() {
         >
           HMall
         </h4>
-        <NavLink
-          to="/admin"
-          end
-          className="mb-3 text-white text-decoration-none d-flex align-items-center"
-        >
-          <House className="me-2" /> {!collapsed && "Dashboard"}
-        </NavLink>
-        <NavLink
-          to="/admin/products"
-          className="mb-3 text-white text-decoration-none d-flex align-items-center"
-        >
-          <Box className="me-2" /> {!collapsed && "Products"}
-        </NavLink>
+
+
 
         <NavLink
           to="/admin/users"

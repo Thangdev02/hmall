@@ -257,9 +257,7 @@ export default function ShopsManagement() {
 
                     {/* Phân trang */}
                     <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            Hiển thị {shops.length} / {pagination.totalRecord} cửa hàng
-                        </div>
+
                         <div>
                             <Button
                                 variant="outline-primary"

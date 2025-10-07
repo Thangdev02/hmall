@@ -41,7 +41,7 @@ const BlogImage = ({ src, alt, className, style }) => {
 
 const Blog = () => {
     const [blogs, setBlogs] = useState([]);
-    const [featuredBlog, setFeaturedBlog] = useState(null); // Blog nổi bật riêng
+    const [featuredBlog, setFeaturedBlog] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -84,25 +84,23 @@ const Blog = () => {
     // Lấy blog có nhiều like nhất cho featured
     const fetchFeaturedBlog = async () => {
         try {
-            // Lấy danh sách blog với pageSize lớn để tìm blog có like cao nhất
             const res = await getBlogs({
                 pageNumber: 1,
-                pageSize: 50, // Lấy nhiều blog để so sánh
-                sortBy: 'totalLike', // Nếu API hỗ trợ sort
+                pageSize: 50,
+                sortBy: 'totalLike',
                 sortOrder: 'desc'
             });
 
             if (res.statusCode === 200 && res.data.items.length > 0) {
-                // Tìm blog có totalLike cao nhất
                 const mostLikedBlog = res.data.items.reduce((prev, current) => {
                     return (current.totalLike > prev.totalLike) ? current : prev;
                 });
 
                 setFeaturedBlog(mostLikedBlog);
-                console.log('Featured blog (most liked):', mostLikedBlog);
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
-            console.error('Error fetching featured blog:', error);
+            // ignore
         }
     };
 
@@ -127,15 +125,14 @@ const Blog = () => {
                     setTotalPages(res.data.totalPages || 1);
                     setTotalItems(res.data.totalRecord || 0);
 
-                    // Chỉ fetch featured blog khi không có search và là trang đầu
                     if (!searchTerm && pageNumber === 1) {
                         await fetchFeaturedBlog();
                     }
                 } else {
                     setError(res.message || 'Không thể tải bài viết');
                 }
+                // eslint-disable-next-line no-unused-vars
             } catch (error) {
-                console.error('Error fetching blogs:', error);
                 setError('Không thể tải bài viết. Vui lòng thử lại.');
             } finally {
                 setLoading(false);
@@ -159,7 +156,7 @@ const Blog = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         setPageNumber(1);
-        setFeaturedBlog(null); // Ẩn featured blog khi search
+        setFeaturedBlog(null);
     };
 
     // Xử lý thay đổi trang
@@ -172,12 +169,11 @@ const Blog = () => {
     const resetFilters = () => {
         setSearchTerm('');
         setPageNumber(1);
-        // Sẽ tự động fetch lại featured blog khi reset
     };
 
     // Validate image
     const validateImage = (file) => {
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 5 * 1024 * 1024;
         if (!file.type.startsWith("image/")) {
             return "Chỉ chấp nhận file ảnh (jpg, png, etc.)";
         }
@@ -209,8 +205,8 @@ const Blog = () => {
             } else {
                 setCreateAlert({ show: true, message: 'Tải ảnh thất bại: Không nhận được đường dẫn ảnh', variant: 'danger' });
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
-            console.error('Upload error:', error);
             setCreateAlert({ show: true, message: 'Tải ảnh thất bại!', variant: 'danger' });
         } finally {
             setUploading(false);
@@ -232,13 +228,16 @@ const Blog = () => {
         return temp.textContent || temp.innerText || '';
     };
 
-    // Xử lý tạo blog mới
+    // Xử lý tạo blog mới (validate tất cả trường có dấu *)
     const handleCreateBlog = async () => {
         if (!newBlog.title.trim()) {
             setCreateAlert({ show: true, message: 'Vui lòng nhập tiêu đề bài viết!', variant: 'danger' });
             return;
         }
-
+        if (!newBlog.image) {
+            setCreateAlert({ show: true, message: 'Vui lòng chọn ảnh bài viết!', variant: 'danger' });
+            return;
+        }
         const plainTextContent = stripHtml(newBlog.content);
         if (!plainTextContent.trim()) {
             setCreateAlert({ show: true, message: 'Vui lòng nhập nội dung bài viết!', variant: 'danger' });
@@ -249,13 +248,11 @@ const Blog = () => {
         try {
             const blogData = {
                 title: newBlog.title,
-                content: newBlog.content, // Gửi HTML content
+                content: newBlog.content,
                 image: newBlog.image || ''
             };
 
-            console.log('Creating blog with data:', blogData);
             const res = await createBlog(blogData, token);
-            console.log('Create blog response:', res);
 
             if (res.statusCode === 200) {
                 setCreateAlert({ show: true, message: 'Tạo bài viết thành công!', variant: 'success' });
@@ -266,15 +263,14 @@ const Blog = () => {
                 setTimeout(() => {
                     setShowCreateModal(false);
                     setCreateAlert({ show: false, message: '', variant: 'success' });
-                    // Refresh danh sách blog
                     setPageNumber(1);
                     window.location.reload();
                 }, 1500);
             } else {
                 setCreateAlert({ show: true, message: res.message || 'Có lỗi xảy ra!', variant: 'danger' });
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (error) {
-            console.error('Error creating blog:', error);
             setCreateAlert({ show: true, message: 'Có lỗi xảy ra khi tạo bài viết!', variant: 'danger' });
         } finally {
             setCreateLoading(false);
@@ -629,21 +625,29 @@ const Blog = () => {
 
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>Tiêu đề bài viết *</Form.Label>
+                            <Form.Label>
+                                Tiêu đề bài viết <span style={{ color: "red" }}>*</span>
+                            </Form.Label>
                             <Form.Control
                                 type="text"
                                 placeholder="Nhập tiêu đề bài viết..."
                                 value={newBlog.title}
                                 onChange={(e) => setNewBlog(prev => ({ ...prev, title: e.target.value }))}
                                 maxLength={200}
+                                isInvalid={!newBlog.title.trim() && createAlert.show}
                             />
+                            <Form.Control.Feedback type="invalid">
+                                Vui lòng nhập tiêu đề bài viết!
+                            </Form.Control.Feedback>
                             <Form.Text className="text-muted">
                                 {newBlog.title.length}/200 ký tự
                             </Form.Text>
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Ảnh bài viết*</Form.Label>
+                            <Form.Label>
+                                Ảnh bài viết <span style={{ color: "red" }}>*</span>
+                            </Form.Label>
                             <Form.Control
                                 type="file"
                                 accept="image/*"
@@ -651,7 +655,11 @@ const Blog = () => {
                                 onChange={handleImageUpload}
                                 disabled={uploading}
                                 aria-describedby="image-help"
+                                isInvalid={!newBlog.image && createAlert.show}
                             />
+                            <Form.Control.Feedback type="invalid">
+                                Vui lòng chọn ảnh bài viết!
+                            </Form.Control.Feedback>
                             <Form.Text id="image-help" muted>
                                 Chọn file ảnh (jpg, png, tối đa 5MB)*
                             </Form.Text>
@@ -676,7 +684,9 @@ const Blog = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Nội dung bài viết *</Form.Label>
+                            <Form.Label>
+                                Nội dung bài viết <span style={{ color: "red" }}>*</span>
+                            </Form.Label>
                             <ReactQuill
                                 theme="snow"
                                 value={newBlog.content}
@@ -686,6 +696,11 @@ const Blog = () => {
                                 placeholder="Viết nội dung bài viết của bạn..."
                                 style={{ height: '200px', marginBottom: '50px' }}
                             />
+                            {(!stripHtml(newBlog.content).trim() && createAlert.show) && (
+                                <div style={{ color: "red", fontSize: 13, marginTop: 4 }}>
+                                    Vui lòng nhập nội dung bài viết!
+                                </div>
+                            )}
                             <Form.Text className="text-muted">
                                 {stripHtml(newBlog.content).length}/5000 ký tự
                             </Form.Text>
@@ -699,7 +714,7 @@ const Blog = () => {
                     <Button
                         variant="primary"
                         onClick={handleCreateBlog}
-                        disabled={createLoading || uploading || !newBlog.title.trim() || !stripHtml(newBlog.content).trim()}
+                        disabled={createLoading || uploading || !newBlog.title.trim() || !stripHtml(newBlog.content).trim() || !newBlog.image}
                         style={{
                             background: "linear-gradient(135deg, #84B4C8 0%, #B2D9EA 100%)",
                             border: "none"

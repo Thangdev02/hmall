@@ -539,11 +539,7 @@ const BlogManagementUser = () => {
                     )}
 
                     {/* Info */}
-                    <div className="text-center mt-3">
-                        <small className="text-muted">
-                            Hiển thị {blogs.length} / {pagination.totalCount} bài viết
-                        </small>
-                    </div>
+
                 </>
             )}
 
@@ -634,7 +630,7 @@ const BlogManagementUser = () => {
 
                         {/* Upload ảnh */}
                         <Form.Group className="mb-3">
-                            <Form.Label>Hình ảnh (URL hoặc upload)</Form.Label>
+                            <Form.Label>Hình ảnh (URL hoặc upload)*</Form.Label>
                             <div className="d-flex align-items-center gap-2">
                                 <Form.Control
                                     type="url"
@@ -731,13 +727,13 @@ const BlogManagementUser = () => {
                                 <strong>Cảnh báo!</strong> Bạn có chắc chắn muốn xóa bài viết này không?
                             </Alert>
                             <div className="mb-2">
-                                <strong>Tiêu đề:</strong> {deleteTarget.title}
+                                <strong>Tiêu đề:<span className="text-danger">*</span></strong> {deleteTarget.title}
                             </div>
                             <div className="mb-2">
-                                <strong>Lượt thích:</strong> {deleteTarget.totalLike || 0}
+                                <strong>Lượt thích:<span className="text-danger">*</span></strong> {deleteTarget.totalLike || 0}
                             </div>
                             <div className="mb-2">
-                                <strong>Bình luận:</strong> {deleteTarget.totalComment || 0}
+                                <strong>Bình luận:<span className="text-danger">*</span></strong> {deleteTarget.totalComment || 0}
                             </div>
                             <div className="text-danger">
                                 <small>* Hành động này không thể hoàn tác</small>

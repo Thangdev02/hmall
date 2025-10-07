@@ -47,7 +47,12 @@ const NavigationBar = () => {
           style={{ width: "80px", height: "80px", cursor: "pointer" }}
           onClick={() => handleNavigation("/")}
         >
-          <img src="./images/HMallLogo.jpg" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          <img
+            src="/images/HMallLogo.jpg"
+            alt="Logo"
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            onError={e => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/80x80?text=Logo"; }}
+          />
         </div>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Badge, Pagination, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Badge, Pagination, Spinner, Alert, Toast, ToastContainer } from 'react-bootstrap';
 import { motion } from 'framer-motion';
-import { Star, Heart, Search, Filter } from 'react-bootstrap-icons';
-import { Link, useParams } from 'react-router-dom';
-import { getProducts } from '../../api/product';
+import { Star, Heart, HeartFill, Search, Filter } from 'react-bootstrap-icons';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { getProducts, favoriteProduct } from '../../api/product';
 import './ProductsShop.css';
 
 const ProductsShop = () => {
-    const { shopId } = useParams(); // Lấy shopId từ URL params
+    const { shopId } = useParams();
+    const navigate = useNavigate();
+    const token = localStorage.getItem("token");
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -19,7 +22,92 @@ const ProductsShop = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
 
-    // Lấy danh sách sản phẩm từ API
+    // Like (favorite) states
+    const [favoriteLoadings, setFavoriteLoadings] = useState({});
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const [toastType, setToastType] = useState("success");
+
+    // Utility for localStorage favorite
+    const FAVORITES_KEY = 'userFavorites';
+
+    const getFavoriteStatus = (productId) => {
+        if (!token || !productId) return false;
+        try {
+            const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
+            const userFavorites = allFavorites[token] || {};
+            return Boolean(userFavorites[productId]);
+            // eslint-disable-next-line no-unused-vars
+        } catch (error) {
+            return false;
+        }
+    };
+
+    const setFavoriteStatus = (productId, status) => {
+        if (!token || !productId) return;
+        try {
+            const allFavorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
+            if (!allFavorites[token]) {
+                allFavorites[token] = {};
+            }
+            if (status) {
+                allFavorites[token][productId] = true;
+            } else {
+                delete allFavorites[token][productId];
+            }
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(allFavorites));
+            window.dispatchEvent(new CustomEvent('localStorageChange', {
+                detail: { key: FAVORITES_KEY, productId, status }
+            }));
+            // eslint-disable-next-line no-unused-vars, no-empty
+        } catch (error) { }
+    };
+
+    const handleFavoriteToggle = async (e, productId) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!token) {
+            localStorage.setItem('redirectAfterLogin', window.location.pathname)
+            navigate("/login")
+            return
+        }
+
+        setFavoriteLoadings(prev => ({ ...prev, [productId]: true }));
+
+        const oldStatus = getFavoriteStatus(productId);
+        const newStatus = !oldStatus;
+
+        setFavoriteStatus(productId, newStatus);
+
+        try {
+            const response = await favoriteProduct(productId, token);
+
+            if (response?.statusCode === 200) {
+                setToastMessage(
+                    newStatus
+                        ? "Đã thêm vào danh sách yêu thích!"
+                        : "Đã bỏ khỏi danh sách yêu thích!"
+                );
+                setToastType("success");
+                setShowToast(true);
+            } else {
+                setFavoriteStatus(productId, oldStatus);
+                setToastMessage(response?.message || "Có lỗi xảy ra!");
+                setToastType("danger");
+                setShowToast(true);
+            }
+            // eslint-disable-next-line no-unused-vars
+        } catch (error) {
+            setFavoriteStatus(productId, oldStatus);
+            setToastMessage("Có lỗi xảy ra khi cập nhật yêu thích!");
+            setToastType("danger");
+            setShowToast(true);
+        } finally {
+            setFavoriteLoadings(prev => ({ ...prev, [productId]: false }));
+        }
+    };
+
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
@@ -30,7 +118,7 @@ const ProductsShop = () => {
                     pageNumber,
                     pageSize,
                     ShopID: shopId,
-                    isActive: true, // Chỉ lấy sản phẩm đang hoạt động
+                    isActive: true,
                 };
 
                 if (searchTerm) params.search = searchTerm;
@@ -45,8 +133,8 @@ const ProductsShop = () => {
                 } else {
                     setError(res.message || 'Không thể tải sản phẩm');
                 }
+                // eslint-disable-next-line no-unused-vars
             } catch (error) {
-                console.error('Error fetching products:', error);
                 setError('Không thể tải sản phẩm. Vui lòng thử lại.');
             } finally {
                 setLoading(false);
@@ -58,22 +146,18 @@ const ProductsShop = () => {
         }
     }, [shopId, pageNumber, pageSize, searchTerm, selectedCategory]);
 
-    // Lấy danh sách categories từ sản phẩm
     const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
-    // Xử lý tìm kiếm
     const handleSearch = (e) => {
         e.preventDefault();
         setPageNumber(1);
     };
 
-    // Xử lý thay đổi trang
     const handlePageChange = (newPage) => {
         setPageNumber(newPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Reset bộ lọc
     const resetFilters = () => {
         setSearchTerm('');
         setSelectedCategory('all');
@@ -275,6 +359,7 @@ const ProductsShop = () => {
                                                         Còn hàng
                                                     </Badge>
                                                 )}
+                                                {/* Like button giống Products */}
                                                 <Button
                                                     variant="light"
                                                     className="position-absolute"
@@ -287,9 +372,20 @@ const ProductsShop = () => {
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
+                                                        backgroundColor: 'rgba(255,255,255,0.9)',
+                                                        border: 'none'
                                                     }}
+                                                    onClick={(e) => handleFavoriteToggle(e, product.id)}
+                                                    disabled={favoriteLoadings[product.id]}
+                                                    title={getFavoriteStatus(product.id) ? "Bỏ yêu thích" : "Yêu thích"}
                                                 >
-                                                    <Heart size={16} />
+                                                    {favoriteLoadings[product.id] ? (
+                                                        <Spinner size="sm" />
+                                                    ) : getFavoriteStatus(product.id) ? (
+                                                        <HeartFill color="#ff0000" size={16} />
+                                                    ) : (
+                                                        <Heart size={16} />
+                                                    )}
                                                 </Button>
                                             </div>
                                             <Card.Body className="d-flex flex-column">
@@ -395,6 +491,19 @@ const ProductsShop = () => {
                         </Col>
                     </Row>
                 )}
+
+                {/* Toast notifications */}
+                <ToastContainer position="top-end" className="p-3">
+                    <Toast
+                        onClose={() => setShowToast(false)}
+                        show={showToast}
+                        delay={3000}
+                        autohide
+                        bg={toastType}
+                    >
+                        <Toast.Body className="text-white">{toastMessage}</Toast.Body>
+                    </Toast>
+                </ToastContainer>
             </Container>
         </div>
     );

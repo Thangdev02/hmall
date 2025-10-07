@@ -407,7 +407,7 @@ const ShopProducts = () => {
                                     />
                                 </Form.Group>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Danh mục <span className="text-danger">*</span></Form.Label>
+                                    <Form.Label className="mt-5">Danh mục <span className="text-danger">*</span></Form.Label>
                                     <Form.Select
                                         name="category"
                                         value={editForm.category}
@@ -482,7 +482,7 @@ const ShopProducts = () => {
                                     </Form.Control.Feedback>
                                 </Form.Group>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Chất liệu</Form.Label>
+                                    <Form.Label>Chất liệu<span className="text-danger">*</span></Form.Label>
                                     <Form.Control
                                         name="material"
                                         value={editForm.material}
@@ -494,7 +494,7 @@ const ShopProducts = () => {
                             </Col>
                         </Row>
                         <Form.Group className="mb-3">
-                            <Form.Label>Ảnh chính</Form.Label>
+                            <Form.Label>Ảnh chính<span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="file"
                                 accept="image/*"
@@ -527,7 +527,7 @@ const ShopProducts = () => {
                             )}
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Ảnh bổ sung (tối đa 5)</Form.Label>
+                            <Form.Label>Ảnh bổ sung (tối đa 5)<span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="file"
                                 accept="image/*"

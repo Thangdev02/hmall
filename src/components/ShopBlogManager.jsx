@@ -209,7 +209,7 @@ const ShopBlogManager = () => {
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            <Form.Label>Tiêu đề</Form.Label>
+                            <Form.Label>Tiêu đề<span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="text"
                                 value={blogForm.title}
@@ -217,7 +217,7 @@ const ShopBlogManager = () => {
                             />
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Ảnh</Form.Label>
+                            <Form.Label>Ảnh<span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 type="file"
                                 accept="image/*"
@@ -244,7 +244,7 @@ const ShopBlogManager = () => {
                             )}
                         </Form.Group>
                         <Form.Group className="mb-3">
-                            <Form.Label>Nội dung</Form.Label>
+                            <Form.Label>Nội dung<span className="text-danger">*</span></Form.Label>
                             <Form.Control
                                 as="textarea"
                                 rows={5}

@@ -29,7 +29,7 @@ const BankManagement = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [formData, setFormData] = useState({
-        bankName: '', // Sẽ lưu code của ngân hàng
+        bankName: '',
         bankNo: ''
     });
 
@@ -112,10 +112,10 @@ const BankManagement = () => {
 
     // Handle bank selection change
     const handleBankSelect = (e) => {
-        const selectedBankCode = e.target.value; // Lấy code thay vì name
+        const selectedBankCode = e.target.value;
         setFormData(prev => ({
             ...prev,
-            bankName: selectedBankCode // Lưu code vào bankName
+            bankName: selectedBankCode
         }));
     };
 
@@ -130,7 +130,7 @@ const BankManagement = () => {
     const handleEdit = (bank) => {
         setEditingBank(bank);
         setFormData({
-            bankName: bank.bankName, // Đây sẽ là code
+            bankName: bank.bankName,
             bankNo: bank.bankNo
         });
         setShowModal(true);
@@ -149,9 +149,8 @@ const BankManagement = () => {
             setSaving(true);
             let response;
 
-            // Gửi data với bankName là code
             const submitData = {
-                bankName: formData.bankName, // Code của ngân hàng
+                bankName: formData.bankName,
                 bankNo: formData.bankNo
             };
 
@@ -164,7 +163,7 @@ const BankManagement = () => {
             if (response.statusCode === 200) {
                 setSuccess(editingBank ? 'Cập nhật ngân hàng thành công!' : 'Thêm ngân hàng thành công!');
                 setShowModal(false);
-                fetchBanks(); // Reload data
+                fetchBanks();
             } else {
                 setError(response.message || 'Có lỗi xảy ra');
             }
@@ -223,11 +222,9 @@ const BankManagement = () => {
                 </Button>
             </Card.Header>
             <Card.Body>
-                {/* Alert Messages */}
                 {error && <Alert variant="danger">{error}</Alert>}
                 {success && <Alert variant="success">{success}</Alert>}
 
-                {/* Loading State */}
                 {loading ? (
                     <div className="text-center py-4">
                         <Spinner animation="border" role="status">
@@ -236,7 +233,6 @@ const BankManagement = () => {
                     </div>
                 ) : (
                     <>
-                        {/* Banks Table */}
                         {banks.length > 0 ? (
                             <Table responsive striped hover>
                                 <thead>
@@ -251,7 +247,7 @@ const BankManagement = () => {
                                     {banks.map((bank) => {
                                         const bankInfo = getBankInfoByCode(bank.bankName);
                                         return (
-                                            <tr key={bank.id}>
+                                            <tr key={bank.id} className={bank.isUse ? "table-success" : ""}>
                                                 <td>
                                                     <div>
                                                         <strong>{bankInfo.short_name}</strong>
@@ -263,14 +259,13 @@ const BankManagement = () => {
                                                     <code>{bank.bankNo}</code>
                                                 </td>
                                                 <td>
-                                                    {bank.isDefault ? (
-                                                        <Badge bg="success">
-                                                            <CheckCircleFill className="me-1" />
-                                                            Mặc định
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge bg="secondary">Thường</Badge>
-                                                    )}
+                                                    <Badge bg={bank.isUse ? "success" : "secondary"}>
+                                                        <CheckCircleFill
+                                                            className="me-1"
+                                                            color={bank.isUse ? "#28a745" : "#adb5bd"}
+                                                        />
+                                                        {bank.isUse ? "Đang sử dụng" : "Thường"}
+                                                    </Badge>
                                                 </td>
                                                 <td>
                                                     <div className="d-flex gap-2">
@@ -281,7 +276,7 @@ const BankManagement = () => {
                                                         >
                                                             <PencilFill size={12} />
                                                         </Button>
-                                                        {!bank.isDefault && (
+                                                        {!bank.isUse && (
                                                             <Button
                                                                 variant="outline-success"
                                                                 size="sm"
@@ -289,6 +284,18 @@ const BankManagement = () => {
                                                                 title="Đặt làm mặc định"
                                                             >
                                                                 <CheckCircleFill size={12} />
+                                                            </Button>
+                                                        )}
+                                                        {bank.isUse && (
+                                                            <Button
+                                                                variant="success"
+                                                                size="sm"
+                                                                disabled
+                                                                style={{ fontWeight: 'bold', borderWidth: 2 }}
+                                                                title="Tài khoản đang sử dụng"
+                                                            >
+                                                                <CheckCircleFill size={12} className="me-1" />
+                                                                Đang sử dụng
                                                             </Button>
                                                         )}
                                                         <Button
@@ -318,7 +325,6 @@ const BankManagement = () => {
                 )}
             </Card.Body>
 
-            {/* Add/Edit Modal */}
             <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>

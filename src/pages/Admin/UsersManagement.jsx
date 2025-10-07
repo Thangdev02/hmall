@@ -167,29 +167,41 @@ export default function UsersManagement() {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.length > 0 ? users.map((user) => (
-                                <tr key={user.id}>
-                                    <td>{user.id}</td>
-                                    <td>{user.userName}</td>
-                                    <td>{user.email}</td>
-                                    <td>{user.fullName || "Chưa cập nhật"}</td>
-                                    <td>{user.phoneNumber || user.phone || "Chưa cập nhật"}</td>
-                                    <td>
-                                        <Badge bg={user.isActive ? "success" : "danger"}>
-                                            {user.isActive ? "Đang hoạt động" : "Bị khóa"}
-                                        </Badge>
-                                    </td>
-                                    <td>
-                                        <Button
-                                            variant={user.isActive ? "danger" : "success"}
-                                            size="sm"
-                                            onClick={() => handleBlockUnblock(user.id)}
-                                        >
-                                            {user.isActive ? "Khóa" : "Mở khóa"}
-                                        </Button>
-                                    </td>
-                                </tr>
-                            )) : (
+                            {(filters.isActive === true
+                                ? users.filter(u => u.isActive === true)
+                                : filters.isActive === false
+                                    ? users.filter(u => u.isActive === false)
+                                    : users
+                            ).length > 0 ? (
+                                (filters.isActive === true
+                                    ? users.filter(u => u.isActive === true)
+                                    : filters.isActive === false
+                                        ? users.filter(u => u.isActive === false)
+                                        : users
+                                ).map((user) => (
+                                    <tr key={user.id}>
+                                        <td>{user.id}</td>
+                                        <td>{user.userName}</td>
+                                        <td>{user.email}</td>
+                                        <td>{user.fullName || "Chưa cập nhật"}</td>
+                                        <td>{user.phoneNumber || user.phone || "Chưa cập nhật"}</td>
+                                        <td>
+                                            <Badge bg={user.isActive ? "success" : "danger"}>
+                                                {user.isActive ? "Đang hoạt động" : "Bị khóa"}
+                                            </Badge>
+                                        </td>
+                                        <td>
+                                            <Button
+                                                variant={user.isActive ? "danger" : "success"}
+                                                size="sm"
+                                                onClick={() => handleBlockUnblock(user.id)}
+                                            >
+                                                {user.isActive ? "Khóa" : "Mở khóa"}
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
                                 <tr>
                                     <td colSpan="7" className="text-center">
                                         Không có dữ liệu
@@ -201,9 +213,7 @@ export default function UsersManagement() {
 
                     {/* Phân trang */}
                     <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                            Hiển thị {users.length} / {pagination.totalRecord} người dùng
-                        </div>
+
                         <div>
                             <Button
                                 variant="outline-primary"

@@ -36,6 +36,7 @@ import ShopsManagement from "./pages/Admin/ShopsManagement";
 import BlogManagementUser from "./components/Profile/BlogManagement";
 import ShopBlogManager from "./components/ShopBlogManager";
 import AdminBlogManager from "./components/AdminBlogManager";
+import RegisterShop from "./pages/RegisterShop/RegisterShop";
 
 // Dummy shop pages
 
@@ -60,6 +61,7 @@ function getRole() {
 const AppContent = () => {
   const location = useLocation();
   const isLogin = location.pathname === "/login";
+  const isRegisterShop = location.pathname === "/register-shop";
   const isRegister = location.pathname === "/register";
   const isForgotPassword = location.pathname === "/forgot-password";
   const isProfile = location.pathname === "/settings";
@@ -70,8 +72,8 @@ const AppContent = () => {
     return (
       <Routes>
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<DashboardHome />} />
-          <Route path="products" element={<ProductsManager />} />
+          <Route index element={<UsersManagement />} />
+
           <Route path="posts" element={<PostsManager />} />
           <Route path="users" element={<UsersManagement />} />
           <Route path="shops" element={<ShopsManagement />} />
@@ -99,12 +101,13 @@ const AppContent = () => {
   // Mặc định là User
   return (
     <div className="App">
-      {!isLogin && !isRegister && !isForgotPassword && <Navbar />}
+      {!isLogin && !isRegister && !isForgotPassword && !isRegisterShop && <Navbar />}
       <main>
         <Routes>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/register-shop" element={<RegisterShop />} />
           <Route
             path="/"
             element={
@@ -186,8 +189,8 @@ const AppContent = () => {
         </Routes>
       </main>
       {/* Không hiện Footer và ScrollToTop khi ở trang login, register hoặc forgot password */}
-      {!isLogin && !isRegister && !isForgotPassword && !isProfile && <Footer />}
-      {!isLogin && !isRegister && !isForgotPassword && <ScrollToTop />}
+      {!isLogin && !isRegister && !isForgotPassword && !isProfile && !isRegisterShop && <Footer />}
+      {!isLogin && !isRegister && !isForgotPassword && !isRegisterShop && <ScrollToTop />}
     </div>
   );
 };

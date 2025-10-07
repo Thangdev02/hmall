@@ -179,11 +179,7 @@ const ShopProfile = () => {
                                 <Col md={9}>
                                     <div className="shop-basic-info">
                                         <h1 className="shop-name">{shopData?.name}</h1>
-                                        <div className="shop-rating">
-                                            <StarFill className="rating-star" />
-                                            <span className="rating-value">{shopData?.ratingAverage || 0}</span>
-                                            <span className="rating-text">({shopData?.reviewCount || 0} đánh giá)</span>
-                                        </div>
+
                                         <Badge bg={shopData?.isActive ? 'success' : 'danger'} className="shop-status">
                                             {shopData?.isActive ? 'Đang hoạt động' : 'Tạm dừng'}
                                         </Badge>
@@ -318,11 +314,11 @@ const ShopProfile = () => {
                             </Col>
                         </Row>
                     </Tab>
-                    
+
                     <Tab eventKey="statistics" title="Thống kê đơn hàng">
                         <OrderStatistics />
                     </Tab>
-                    
+
                     <Tab eventKey="banks" title="Tài khoản ngân hàng">
                         <BankManagement />
                     </Tab>

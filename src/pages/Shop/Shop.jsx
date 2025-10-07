@@ -17,6 +17,7 @@ const Shop = () => {
     const [totalItems, setTotalItems] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [selectedProvince, setSelectedProvince] = useState("all");
+    // eslint-disable-next-line no-unused-vars
     const [isActiveFilter, setIsActiveFilter] = useState(true);
 
     useEffect(() => {
@@ -122,14 +123,7 @@ const Shop = () => {
                         </div>
                     </Col>
                     <Col lg={4} className="d-flex gap-2">
-                        <Form.Select
-                            value={isActiveFilter}
-                            onChange={(e) => setIsActiveFilter(e.target.value === 'true')}
-                            style={{ borderRadius: "25px" }}
-                        >
-                            <option value={true}>Đang hoạt động</option>
-                            <option value={false}>Tạm đóng cửa</option>
-                        </Form.Select>
+
                         <Button
                             variant="outline-secondary"
                             onClick={() => setShowFilters(!showFilters)}

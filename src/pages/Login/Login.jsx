@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import "./Login.css";
 import { login } from "../../api/auth";
 import { useNavigate } from "react-router-dom";
-import { PersonFill, LockFill, EyeFill, EyeSlashFill } from "react-bootstrap-icons"; // ✅ thêm icon mở/đóng
+import { PersonFill, LockFill, EyeFill, EyeSlashFill } from "react-bootstrap-icons";
 
 const Login = () => {
     const [form, setForm] = useState({ username: "", password: "" });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); // ✅ thêm state cho icon
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -36,9 +36,19 @@ const Login = () => {
                 if (res.data.role === "Admin") navigate("/admin");
                 else if (res.data.role === "Shop") navigate("/shop/profile");
                 else navigate("/");
-            } else {
-                setError(res?.message || "Đăng nhập thất bại!");
+            } else if (
+                res &&
+                res.statusCode === 400 &&
+                res.message === "Bạn chưa đăng ký thông tin shop vui lòng đăng ký" &&
+                res.data?.role === "Shop"
+            ) {
+                localStorage.setItem("userId", res.data.userId);
+                localStorage.setItem("username", res.data.username);
+                localStorage.setItem("role", res.data.role);
+                // Chuyển sang trang đăng ký shop riêng
+                navigate("/register-shop");
             }
+
         } catch (err) {
             console.error("Lỗi đăng nhập:", err);
             setError("Có lỗi xảy ra. Vui lòng thử lại!");
@@ -82,7 +92,6 @@ const Login = () => {
                             value={form.password}
                             onChange={handleChange}
                         />
-                        {/* 👁️ icon đóng/mở */}
                         {showPassword ? (
                             <EyeSlashFill
                                 className="toggle-password-icon"

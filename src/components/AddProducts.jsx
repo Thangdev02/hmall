@@ -222,7 +222,7 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
                                 </Form.Control.Feedback>
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Mô tả</Form.Label>
+                                <Form.Label>Mô tả<span className="text-danger">*</span></Form.Label>
                                 <ReactQuill
                                     value={form.description}
                                     onChange={handleDescriptionChange}
@@ -232,7 +232,7 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
                                 />
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Danh mục <span className="text-danger">*</span></Form.Label>
+                                <Form.Label className="mt-5">Danh mục <span className="text-danger">*</span></Form.Label>
                                 <Form.Select
                                     name="category"
                                     value={form.category}
@@ -307,7 +307,7 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
                                 </Form.Control.Feedback>
                             </Form.Group>
                             <Form.Group className="mb-3">
-                                <Form.Label>Chất liệu</Form.Label>
+                                <Form.Label>Chất liệu<span className="text-danger">*</span></Form.Label>
                                 <Form.Control
                                     name="material"
                                     value={form.material}
@@ -319,7 +319,7 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
                         </Col>
                     </Row>
                     <Form.Group className="mb-3">
-                        <Form.Label>Ảnh chính</Form.Label>
+                        <Form.Label>Ảnh chính<span className="text-danger">*</span></Form.Label>
                         <Form.Control
                             type="file"
                             accept="image/*"
@@ -352,7 +352,7 @@ const AddProducts = ({ show, onHide, onCreated, token }) => {
                         )}
                     </Form.Group>
                     <Form.Group className="mb-3">
-                        <Form.Label>Ảnh phụ (tối đa 5)</Form.Label>
+                        <Form.Label>Ảnh phụ (tối đa 5)<span className="text-danger">*</span></Form.Label>
                         {form.moreImage.map((img, idx) => (
                             <div key={idx} className="d-flex mb-2 align-items-center">
                                 <Form.Control
