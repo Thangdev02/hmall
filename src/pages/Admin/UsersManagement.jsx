@@ -15,7 +15,7 @@ export default function UsersManagement() {
     });
     const [filters, setFilters] = useState({
         search: "",
-        isActive: undefined // Thay đổi từ filter thành isActive
+        isActive: undefined
     });
 
     const token = localStorage.getItem("token");
@@ -37,7 +37,12 @@ export default function UsersManagement() {
             const response = await getUsers(params, token);
 
             if (response.statusCode === 200) {
-                setUsers(response.data.items || []);
+                let items = response.data.items || [];
+                // Nếu lọc bị khóa, chỉ lấy user có isActive === false (fix BE trả về sai)
+                if (filters.isActive === false) {
+                    items = items.filter(u => u.isActive === false);
+                }
+                setUsers(items);
                 setPagination(prev => ({
                     ...prev,
                     totalPages: response.data.totalPages || 0,
@@ -88,7 +93,6 @@ export default function UsersManagement() {
         setPagination(prev => ({ ...prev, pageNumber: 1 }));
     };
 
-    // Thay đổi dependency từ filters.filter thành filters.isActive
     useEffect(() => {
         fetchUsers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,7 +173,7 @@ export default function UsersManagement() {
                                     <td>{user.userName}</td>
                                     <td>{user.email}</td>
                                     <td>{user.fullName || "Chưa cập nhật"}</td>
-                                    <td>{user.phoneNumber || "Chưa cập nhật"}</td>
+                                    <td>{user.phoneNumber || user.phone || "Chưa cập nhật"}</td>
                                     <td>
                                         <Badge bg={user.isActive ? "success" : "danger"}>
                                             {user.isActive ? "Đang hoạt động" : "Bị khóa"}
