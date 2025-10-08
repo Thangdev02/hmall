@@ -51,6 +51,7 @@
 .card-text {
   display: -webkit-box;
   -webkit-line-clamp: 3; /* Giới hạn mô tả ở 3 dòng */
+  line-clamp: 3; /* Chuẩn hóa thuộc tính cho các trình duyệt hỗ trợ */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis; /* Thêm dấu ba chấm cho văn bản bị cắt */
