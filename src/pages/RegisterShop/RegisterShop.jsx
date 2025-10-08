@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./RegisterShop.css";
+import "./Registershop.css";
 import { useNavigate } from "react-router-dom";
 import { registerShop } from "../../api/shop";
 import { uploadMultipleFilesUser } from "../../api/upload";
