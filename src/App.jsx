@@ -24,24 +24,18 @@ import ShopProducts from "./pages/ProductsShop/ShopProducts";
 import Register from "./pages/Register/Register";
 import ForgotPassword from "./pages/ForgotPassWord/Forgot-password";
 import AdminLayout from "./pages/Admin/AdminLayout";
-import DashboardHome from "./pages/Admin/DashboardHome";
-import ProductsManager from "./pages/Admin/ProductsManager";
+import UsersManagement from "./pages/Admin/UsersManagement";
+import ShopsManagement from "./pages/Admin/ShopsManagement";
 import PostsManager from "./pages/Admin/PostsManager";
 import ShopProfile from "./pages/ShopProfile/ShopProfile";
 import Shop from "./pages/Shop/Shop";
-import ProductsShop from "./pages/ProductsInShop/ProductsShop";
+import ProductsShopIn from "./pages/ProductsInShop/ProductsShop";
 import OrderShop from "./pages/OrderShop/OrderShop";
-import UsersManagement from "./pages/Admin/UsersManagement";
-import ShopsManagement from "./pages/Admin/ShopsManagement";
 import BlogManagementUser from "./components/Profile/BlogManagement";
 import ShopBlogManager from "./components/ShopBlogManager";
 import AdminBlogManager from "./components/AdminBlogManager";
 import RegisterShop from "./pages/RegisterShop/RegisterShop";
 
-// Dummy shop pages
-
-
-// RoleEnum mapping
 const RoleEnum = {
   Admin: 1,
   Shop: 2,
@@ -57,7 +51,6 @@ function getRole() {
   return null;
 }
 
-// Component để kiểm tra vai trò và render layout
 const AppContent = () => {
   const location = useLocation();
   const isLogin = location.pathname === "/login";
@@ -67,13 +60,12 @@ const AppContent = () => {
   const isProfile = location.pathname === "/settings";
   const role = getRole();
 
-  // Nếu là Admin, dùng AdminLayout với các route
+  // Admin layout
   if (role === RoleEnum.Admin && location.pathname.startsWith("/admin")) {
     return (
       <Routes>
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<UsersManagement />} />
-
           <Route path="posts" element={<PostsManager />} />
           <Route path="users" element={<UsersManagement />} />
           <Route path="shops" element={<ShopsManagement />} />
@@ -83,7 +75,7 @@ const AppContent = () => {
     );
   }
 
-  // Nếu là Shop, dùng ShopLayout với các route
+  // Shop layout
   if (role === RoleEnum.Shop && location.pathname.startsWith("/shop")) {
     return (
       <ShopLayout>
@@ -98,7 +90,7 @@ const AppContent = () => {
     );
   }
 
-  // Mặc định là User
+  // User layout
   return (
     <div className="App">
       {!isLogin && !isRegister && !isForgotPassword && !isRegisterShop && <Navbar />}
@@ -143,9 +135,8 @@ const AppContent = () => {
           />
           <Route path="/shop/:shopId/products" element={
             <PageTransition>
-              <ProductsShop />
+              <ProductsShopIn />
             </PageTransition>
-
           } />
           <Route
             path="/about"
@@ -165,11 +156,7 @@ const AppContent = () => {
           />
           <Route
             path="/my-blogs"
-            element={
-
-              <BlogManagementUser />
-
-            }
+            element={<BlogManagementUser />}
           />
           <Route
             path="/blog"
@@ -181,14 +168,8 @@ const AppContent = () => {
           />
           <Route path="/blog/:id" element={<BlogDetail />} />
           <Route path="/settings" element={<Profile />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="products" element={<ProductsManager />} />
-            <Route path="posts" element={<PostsManager />} />
-          </Route>
         </Routes>
       </main>
-      {/* Không hiện Footer và ScrollToTop khi ở trang login, register hoặc forgot password */}
       {!isLogin && !isRegister && !isForgotPassword && !isProfile && !isRegisterShop && <Footer />}
       {!isLogin && !isRegister && !isForgotPassword && !isRegisterShop && <ScrollToTop />}
     </div>
