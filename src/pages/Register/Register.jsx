@@ -273,7 +273,7 @@ const Register = () => {
                             </select>
 
                             {error && (
-                                <div style={{ color: "#e74c3c", marginBottom: 8, fontSize: 14 }}>{error}</div>
+                                <div style={{ color: "#e74c3c", marginBottom: 8, fontSize: "14px" }}>{error}</div>
                             )}
 
                             <button className="login-btn" type="submit" disabled={loading}>
