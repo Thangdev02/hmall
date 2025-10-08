@@ -32,7 +32,6 @@ const CommentItem = memo(({
         if (typeof isAuthenticated === 'function') {
             return isAuthenticated();
         }
-        // Fallback check nếu prop không được truyền
         return !!localStorage.getItem('token');
     };
 
@@ -85,16 +84,13 @@ const CommentItem = memo(({
         setReplyContent('');
     };
 
+    // Không xác nhận ở đây, chỉ gọi onDelete lên cha với type
     const handleDeleteComment = () => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa bình luận này?')) {
-            onDelete(comment.id);
-        }
+        onDelete(comment.id, "comment");
     };
 
     const handleDeleteReply = (replyId) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa phản hồi này?')) {
-            onDelete(replyId);
-        }
+        onDelete(replyId, "reply");
     };
 
     return (
@@ -117,8 +113,6 @@ const CommentItem = memo(({
                                 {formatRelativeTime(comment.createdDate)}
                             </small>
                         </div>
-
-                        {/* Sử dụng checkIsAuthenticated thay vì isAuthenticated() */}
                         {checkIsAuthenticated() && isMyComment() && (
                             <Dropdown>
                                 <Dropdown.Toggle variant="link" className="text-muted border-0 p-0">
@@ -260,8 +254,6 @@ const CommentItem = memo(({
                                                         {formatRelativeTime(reply.createdDate)}
                                                     </small>
                                                 </div>
-
-                                                {/* Sử dụng checkIsAuthenticated cho reply */}
                                                 {checkIsAuthenticated() && isMyReply(reply) && (
                                                     <Dropdown>
                                                         <Dropdown.Toggle variant="link" className="text-muted border-0 p-0">
