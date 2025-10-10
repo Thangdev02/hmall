@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { DownOutlined, EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { uploadMultipleFilesUser } from "../../api/upload";
 import "./Register.css";
 import { register } from "../../api/auth";
@@ -285,12 +285,41 @@ const Register = () => {
                             />
 
                             <label htmlFor="role">Vai trò</label>
-                            <select id="role" name="role" value={form.role} onChange={handleRoleChange}>
-                                {roleOptions.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-
+                            <div style={{ position: "relative", marginBottom: 16 }}>
+                                <select
+                                    id="role"
+                                    name="role"
+                                    value={form.role}
+                                    onChange={handleRoleChange}
+                                    style={{
+                                        width: "100%",
+                                        padding: "8px 36px 8px 12px",
+                                        border: "1px solid #ccc",
+                                        borderRadius: 6,
+                                        fontSize: 16,
+                                        background: "#fff",
+                                        color: "#333",
+                                        outline: "none",
+                                        appearance: "none",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    {roleOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                </select>
+                                <DownOutlined
+                                    style={{
+                                        position: "absolute",
+                                        right: 12,
+                                        top: "50%",
+                                        transform: "translateY(-50%)",
+                                        pointerEvents: "none",
+                                        color: "#888",
+                                        fontSize: 16
+                                    }}
+                                />
+                            </div>
                             {/* Nếu chọn Shop thì hiện link đọc điều khoản */}
                             {form.role === "Shop" && (
                                 <div className="mb-3 mt-2">

@@ -124,7 +124,7 @@ const AboutUs = () => {
                             viewport={{ once: true }}
                         >
                             <img
-                                src="https://ethniichic.com/wp-content/uploads/2021/10/handmade-blog.jpg"
+                                src="/images/br2.jpg"
                                 alt="Our Workshop"
                                 className="img-fluid rounded-3"
                                 style={{ boxShadow: "0 15px 35px rgba(0,0,0,0.1)" }}
@@ -191,42 +191,42 @@ const AboutUs = () => {
 
                 {/* Team Section */}
                 {/* Team Section */}
-<Row className="mb-5">
-  <Col>
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
-      className="text-center mb-5"
-    >
-      <h2 className="display-5 fw-bold mb-3" style={{ color: "#2c3e50" }}>
-        Đội Ngũ Của Chúng Tôi
-      </h2>
-      <p className="lead text-muted">Những nghệ nhân tài năng đứng sau mỗi sản phẩm</p>
-    </motion.div>
-  </Col>
-</Row>
+                <Row className="mb-5">
+                    <Col>
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            viewport={{ once: true }}
+                            className="text-center mb-5"
+                        >
+                            <h2 className="display-5 fw-bold mb-3" style={{ color: "#2c3e50" }}>
+                                Đội Ngũ Của Chúng Tôi
+                            </h2>
+                            <p className="lead text-muted">Những nghệ nhân tài năng đứng sau mỗi sản phẩm</p>
+                        </motion.div>
+                    </Col>
+                </Row>
 
-<div className="team-slider d-flex justify-content-center flex-wrap">
-  {teamMembers.map((member, index) => (
-    <motion.div
-      key={index}
-      className="team-card text-center mx-3 mb-4"
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      viewport={{ once: true }}
-    >
-      <div className="team-img-wrapper">
-        <img src={member.image} alt={member.name} className="team-img" />
-      </div>
-      <h5 className="fw-bold mt-3">{member.name}</h5>
-      <p className="text-primary fw-semibold">{member.role}</p>
-      <p className="text-muted small">{member.description}</p>
-    </motion.div>
-  ))}
-</div>
+                <div className="team-slider d-flex justify-content-center flex-wrap">
+                    {teamMembers.map((member, index) => (
+                        <motion.div
+                            key={index}
+                            className="team-card text-center mx-3 mb-4"
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: index * 0.1 }}
+                            viewport={{ once: true }}
+                        >
+                            <div className="team-img-wrapper">
+                                <img src={member.image} alt={member.name} className="team-img" />
+                            </div>
+                            <h5 className="fw-bold mt-3">{member.name}</h5>
+                            <p className="text-primary fw-semibold">{member.role}</p>
+                            <p className="text-muted small">{member.description}</p>
+                        </motion.div>
+                    ))}
+                </div>
 
 
                 {/* Statistics Section */}
