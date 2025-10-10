@@ -5,6 +5,8 @@ import { uploadMultipleFilesUser } from "../../api/upload";
 import "./Register.css";
 import { register } from "../../api/auth";
 import { registerShop } from "../../api/shop";
+import ShopPolicyAgreement from "../../components/ShopPolicyAgreement";
+import { Modal } from "react-bootstrap";
 
 const roleOptions = [
     { label: "Shop", value: "Shop" },
@@ -42,6 +44,10 @@ const Register = () => {
     const coverInputRef = useRef();
     const navigate = useNavigate();
 
+    // Thêm state cho modal điều khoản
+    const [showPolicyModal, setShowPolicyModal] = useState(false);
+    const [agreedPolicy, setAgreedPolicy] = useState(false);
+
     const handleChange = (e) => {
         // Chỉ cho phép nhập số và tối đa 10 ký tự cho phoneNumber
         if (e.target.name === "phoneNumber") {
@@ -56,6 +62,7 @@ const Register = () => {
 
     const handleRoleChange = (e) => {
         setForm({ ...form, role: e.target.value });
+        setAgreedPolicy(false); // reset lại khi đổi vai trò
     };
 
     // Kiểm tra mật khẩu hợp lệ
@@ -88,10 +95,15 @@ const Register = () => {
             return;
         }
 
+        // Nếu là Shop, bắt buộc phải đồng ý điều khoản
+        if (form.role === "Shop" && !agreedPolicy) {
+            setError("Bạn cần đọc và đồng ý với Chính sách đăng ký Shop.");
+            return;
+        }
+
         setLoading(true);
         try {
             const res = await register(form);
-            // Lấy userID từ res.data hoặc res.data.id hoặc res.data (nếu là chuỗi UUID)
             let newUserID = "";
             if (res && res.statusCode === 201 && res.data) {
                 if (typeof res.data === "object" && res.data.id) {
@@ -114,7 +126,6 @@ const Register = () => {
             } else {
                 setError(res?.message || "Đăng ký thất bại!");
             }
-            // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError("Có lỗi xảy ra. Vui lòng thử lại!");
         }
@@ -189,7 +200,6 @@ const Register = () => {
         setLoading(true);
         try {
             const token = "";
-            // Lấy userID từ state nếu chưa có trong shopForm
             const payload = { ...shopForm, userID: shopForm.userID || userID };
             const res = await registerShop(payload, token);
             if (res && res.statusCode === 200) {
@@ -197,11 +207,16 @@ const Register = () => {
             } else {
                 setError(res?.message || "Đăng ký shop thất bại!");
             }
-            // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError("Có lỗi xảy ra. Vui lòng thử lại!");
         }
         setLoading(false);
+    };
+
+    // Khi đồng ý điều khoản trong modal
+    const handleAgreePolicy = () => {
+        setAgreedPolicy(true);
+        setShowPolicyModal(false);
     };
 
     return (
@@ -272,6 +287,30 @@ const Register = () => {
                                 ))}
                             </select>
 
+                            {/* Nếu chọn Shop thì hiện link đọc điều khoản */}
+                            {form.role === "Shop" && (
+                                <div className="mb-3 mt-2">
+                                    <span style={{ color: "#1976d2", cursor: "pointer", textDecoration: "underline" }}
+                                        onClick={() => setShowPolicyModal(true)}
+                                    >
+                                        Đọc Chính sách đăng ký Shop và Điều khoản sử dụng của HMall
+                                    </span>
+                                    <br />
+                                    <label className="mt-2" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={agreedPolicy}
+                                            onChange={e => setAgreedPolicy(e.target.checked)}
+                                            disabled
+                                            style={{ accentColor: "#1976d2" }}
+                                        />
+                                        <span style={{ fontSize: 14, color: "#1976d2" }}>
+                                            Tôi đã đọc, hiểu và đồng ý với Chính sách đăng ký Shop và Điều khoản sử dụng của HMall.
+                                        </span>
+                                    </label>
+                                </div>
+                            )}
+
                             {error && (
                                 <div style={{ color: "#e74c3c", marginBottom: 8, fontSize: "14px" }}>{error}</div>
                             )}
@@ -284,6 +323,16 @@ const Register = () => {
                         <a className="login-link" href="/login">
                             Đã có tài khoản? Đăng nhập
                         </a>
+
+                        {/* Modal điều khoản */}
+                        <Modal show={showPolicyModal} onHide={() => setShowPolicyModal(false)} size="lg" centered>
+                            <Modal.Header closeButton>
+                                <Modal.Title>Chính sách đăng ký Shop & Điều khoản sử dụng HMall</Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body>
+                                <ShopPolicyAgreement onAgree={handleAgreePolicy} />
+                            </Modal.Body>
+                        </Modal>
                     </>
                 ) : (
                     <>
