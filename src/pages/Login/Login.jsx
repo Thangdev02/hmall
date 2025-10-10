@@ -103,6 +103,9 @@ const Login = () => {
                                 onClick={() => setShowPassword(true)}
                             />
                         )}
+                        <div style={{ fontSize: 13, color: "#1976d2", marginBottom: 8 }}>
+                            Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt (@!@#$%^&*).
+                        </div>
                     </div>
 
                     {error && (

@@ -126,6 +126,7 @@ const Register = () => {
             } else {
                 setError(res?.message || "Đăng ký thất bại!");
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError("Có lỗi xảy ra. Vui lòng thử lại!");
         }
@@ -207,6 +208,7 @@ const Register = () => {
             } else {
                 setError(res?.message || "Đăng ký shop thất bại!");
             }
+            // eslint-disable-next-line no-unused-vars
         } catch (err) {
             setError("Có lỗi xảy ra. Vui lòng thử lại!");
         }
@@ -266,7 +268,9 @@ const Register = () => {
                                     {showPassword ? <EyeTwoTone /> : <EyeInvisibleOutlined />}
                                 </span>
                             </div>
-
+                            <div style={{ fontSize: 13, color: "#1976d2", marginBottom: 8 }}>
+                                Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt (@!@#$%^&*).
+                            </div>
                             <label htmlFor="phoneNumber">Số điện thoại</label>
                             <input
                                 id="phoneNumber"
