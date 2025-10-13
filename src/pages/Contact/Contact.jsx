@@ -468,4 +468,5 @@ const Contact = () => {
       </Container>
     </div>
   )
-} 
+}
+export default Contact
