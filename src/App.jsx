@@ -35,6 +35,7 @@ import BlogManagementUser from "./components/Profile/BlogManagement";
 import ShopBlogManager from "./components/ShopBlogManager";
 import AdminBlogManager from "./components/AdminBlogManager";
 import RegisterShop from "./pages/RegisterShop/RegisterShop";
+import ChatWidget from "./components/ChatWidget/ChatWidget";
 
 const RoleEnum = {
   Admin: 1,
@@ -172,6 +173,8 @@ const AppContent = () => {
       </main>
       {!isLogin && !isRegister && !isForgotPassword && !isProfile && !isRegisterShop && <Footer />}
       {!isLogin && !isRegister && !isForgotPassword && !isRegisterShop && <ScrollToTop />}
+      {!isLogin && !isRegister && !isForgotPassword && !isRegisterShop && <ChatWidget />}
+
     </div>
   );
 };
