@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Star, Heart, HeartFill, Search, Filter } from 'react-bootstrap-icons';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getProducts, favoriteProduct } from '../../api/product';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import './ProductsShop.css';
 
 const ProductsShop = () => {
@@ -407,7 +409,18 @@ const ProductsShop = () => {
                                                         overflow: 'hidden'
                                                     }}
                                                 >
-                                                    {product.description}
+                                                    <ReactQuill
+                                                        value={product.description || ""}
+                                                        readOnly
+                                                        theme="bubble"
+                                                        modules={{ toolbar: false }}
+                                                        style={{
+                                                            background: "transparent",
+                                                            padding: 0,
+                                                            minHeight: 0,
+                                                            fontSize: "0.9rem"
+                                                        }}
+                                                    />
                                                 </Card.Text>
                                                 <div className="d-flex justify-content-between align-items-center mb-3">
                                                     <span className="fw-bold" style={{ color: '#84B4C8', fontSize: '1.3rem' }}>
