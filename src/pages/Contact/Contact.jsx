@@ -264,7 +264,7 @@ const Contact = () => {
                         aria-label="Tiktok"
                       >
                         <img
-                          src="https://upload.wikimedia.org/wikipedia/commons/6/69/Tiktok_logo.png"
+                          src="https://cdn-icons-png.flaticon.com/512/3116/3116491.png"
                           alt="Tiktok"
                           style={{ width: 24, height: 24 }}
                         />
