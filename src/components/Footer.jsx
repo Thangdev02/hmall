@@ -13,9 +13,22 @@ const Footer = () => {
               tuyệt vời nhất.
             </p>
             <div className="d-flex gap-3 mt-3">
-              <Facebook size={20} style={{ color: "#84B4C8", cursor: "pointer" }} />
-              <Instagram size={20} style={{ color: "#84B4C8", cursor: "pointer" }} />
-              <Twitter size={20} style={{ color: "#84B4C8", cursor: "pointer" }} />
+              <a href="https://www.facebook.com/HMall.office" target="_blank" rel="noopener noreferrer">
+                <Facebook size={20} style={{ color: "#84B4C8", cursor: "pointer" }} />
+              </a>
+              <a href="https://www.tiktok.com/@hmallcraft?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/3116/3116491.png"
+                  alt="Tiktok"
+                  style={{ width: 20, height: 20, objectFit: "contain", filter: "grayscale(0)", cursor: "pointer" }}
+                />
+              </a>
+              <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">
+                <Instagram size={20} style={{ color: "#84B4C8", cursor: "pointer" }} />
+              </a>
+              <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer">
+                <Twitter size={20} style={{ color: "#84B4C8", cursor: "pointer" }} />
+              </a>
             </div>
           </Col>
 
@@ -53,11 +66,11 @@ const Footer = () => {
             </div>
             <div className="d-flex align-items-center mb-2">
               <Telephone size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
-              <span style={{ color: "#6c757d", fontSize: "14px" }}>+84 123 456 789</span>
+              <span style={{ color: "#6c757d", fontSize: "14px" }}>0933 203 279</span>
             </div>
             <div className="d-flex align-items-center mb-2">
               <Envelope size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
-              <span style={{ color: "#6c757d", fontSize: "14px" }}>info@hmall.com</span>
+              <span style={{ color: "#6c757d", fontSize: "14px" }}>hmallcraft@gmail.com</span>
             </div>
           </Col>
         </Row>

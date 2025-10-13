@@ -50,26 +50,22 @@ const Contact = () => {
     setIsSubmitting(true)
 
     try {
-      console.log("📤 Sending email with data:", formData)
-
       // ✅ Prepare template parameters matching your EmailJS template
       const templateParams = {
         name: formData.name.trim(),
         email: formData.email.trim(),
         subject: formData.subject.trim() || "Tin nhắn từ website",
         message: formData.message.trim(),
-        to_name: "Quản trị viên", // Optional: recipient name
+        to_name: "Quản trị viên",
       }
 
       // ✅ Send email using EmailJS
-      const result = await emailjs.send(
+      await emailjs.send(
         EMAILJS_SERVICE_ID,
         EMAILJS_TEMPLATE_ID,
         templateParams,
         EMAILJS_PUBLIC_KEY
       )
-
-      console.log("✅ Email sent successfully:", result)
 
       // Show success message
       showNotification(
@@ -86,17 +82,12 @@ const Contact = () => {
       })
 
     } catch (error) {
-      console.error("❌ Failed to send email:", error)
-
       let errorMessage = "Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại sau."
-
-      // Handle specific EmailJS errors
       if (error?.text) {
         errorMessage = `Lỗi: ${error.text}`
       } else if (error?.message) {
         errorMessage = `Lỗi: ${error.message}`
       }
-
       showNotification("danger", errorMessage)
     } finally {
       setIsSubmitting(false)
@@ -177,7 +168,11 @@ const Contact = () => {
                     </div>
                     <div>
                       <h6 className="fw-bold mb-1">Điện thoại</h6>
-                      <p className="text-muted mb-0">+84 123 456 789</p>
+                      <p className="text-muted mb-0">
+                        <a href="tel:0933203279" style={{ color: "#1976d2", textDecoration: "none" }}>
+                          0933 203 279
+                        </a>
+                      </p>
                     </div>
                   </div>
                 </Card.Body>
@@ -198,7 +193,93 @@ const Contact = () => {
                     </div>
                     <div>
                       <h6 className="fw-bold mb-1">Email</h6>
-                      <p className="text-muted mb-0">info@hmall.com</p>
+                      <p className="text-muted mb-0">
+                        <a href="mailto:hmallcraft@gmail.com" style={{ color: "#1976d2", textDecoration: "none" }}>
+                          hmallcraft@gmail.com
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+
+              <Card className="mb-3" style={{ border: "none", backgroundColor: "#f8f9fa" }}>
+                <Card.Body>
+                  <div className="d-flex align-items-center">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-circle me-3"
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        backgroundColor: "#fff",
+                        border: "1px solid #B2D9EA"
+                      }}
+                    >
+                      <a
+                        href="https://www.facebook.com/HMall.office"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center" }}
+                        aria-label="Facebook"
+                      >
+                        <img
+                          src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg"
+                          alt="Facebook"
+                          style={{ width: 24, height: 24, filter: "invert(36%) sepia(70%) saturate(400%) hue-rotate(170deg)" }}
+                        />
+                      </a>
+                    </div>
+                    <div>
+                      <h6 className="fw-bold mb-1">Facebook</h6>
+                      <a
+                        href="https://www.facebook.com/HMall.office"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#1976d2", textDecoration: "none", fontSize: 15 }}
+                      >
+                        facebook.com/HMall.office
+                      </a>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+
+              <Card className="mb-3" style={{ border: "none", backgroundColor: "#f8f9fa" }}>
+                <Card.Body>
+                  <div className="d-flex align-items-center">
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-circle me-3"
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        backgroundColor: "#fff",
+                        border: "1px solid #B2D9EA"
+                      }}
+                    >
+                      <a
+                        href="https://www.tiktok.com/@hmallcraft?is_from_webapp=1&sender_device=pc"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center" }}
+                        aria-label="Tiktok"
+                      >
+                        <img
+                          src="https://upload.wikimedia.org/wikipedia/commons/6/69/Tiktok_logo.png"
+                          alt="Tiktok"
+                          style={{ width: 24, height: 24 }}
+                        />
+                      </a>
+                    </div>
+                    <div>
+                      <h6 className="fw-bold mb-1">TikTok</h6>
+                      <a
+                        href="https://www.tiktok.com/@hmallcraft?is_from_webapp=1&sender_device=pc"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#1976d2", textDecoration: "none", fontSize: 15 }}
+                      >
+                        tiktok.com/@hmallcraft
+                      </a>
                     </div>
                   </div>
                 </Card.Body>
@@ -244,7 +325,6 @@ const Contact = () => {
                     Gửi Tin Nhắn
                   </h3>
 
-                  {/* ✅ Enhanced Alert with different types */}
                   {showAlert && (
                     <Alert variant={alertType} className="mb-4">
                       <strong>
@@ -316,7 +396,6 @@ const Contact = () => {
                       />
                     </Form.Group>
 
-                    {/* ✅ Enhanced Submit Button with loading state */}
                     <Button
                       type="submit"
                       className="btn-primary-custom"
@@ -389,6 +468,4 @@ const Contact = () => {
       </Container>
     </div>
   )
-}
-
-export default Contact
+} 
