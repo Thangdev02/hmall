@@ -28,6 +28,7 @@ const Login = () => {
                 userNameOrEmail: form.username,
                 password: form.password,
             });
+
             if (res && res.statusCode === 200 && res.data) {
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("role", res.data.role);
@@ -36,6 +37,7 @@ const Login = () => {
                 if (res.data.role === "Admin") navigate("/admin");
                 else if (res.data.role === "Shop") navigate("/shop/profile");
                 else navigate("/");
+
             } else if (
                 res &&
                 res.statusCode === 400 &&
@@ -45,17 +47,25 @@ const Login = () => {
                 localStorage.setItem("userId", res.data.userId);
                 localStorage.setItem("username", res.data.username);
                 localStorage.setItem("role", res.data.role);
-                // Chuyển sang trang đăng ký shop riêng
                 navigate("/register-shop");
+            }
+            // ✅ Trường hợp sai tài khoản hoặc mật khẩu
+            else if (res && (res.statusCode === 400 || res.statusCode === 401)) {
+                setError("Tên đăng nhập hoặc mật khẩu không đúng!");
+            }
+            // ✅ Nếu API trả về lỗi khác
+            else {
+                setError(res?.message || "Đăng nhập thất bại. Vui lòng thử lại!");
             }
 
         } catch (err) {
             console.error("Lỗi đăng nhập:", err);
-            setError("Có lỗi xảy ra. Vui lòng thử lại!");
+            setError("Không thể kết nối đến máy chủ. Vui lòng thử lại!");
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="login-bg">
@@ -67,9 +77,9 @@ const Login = () => {
                 <h2 className="login-title">Đăng Nhập</h2>
                 <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
                     {/* Username */}
-                    <label htmlFor="username">Tên đăng nhập</label>
+                    <label htmlFor="username">Tên đăng nhập  <PersonFill className="input-icon" /></label>
                     <div className="input-wrapper">
-                        <PersonFill className="input-icon" />
+
                         <input
                             id="username"
                             name="username"
@@ -81,9 +91,12 @@ const Login = () => {
                     </div>
 
                     {/* Password */}
-                    <label htmlFor="password">Mật khẩu</label>
+                    <label htmlFor="password">Mật khẩu<LockFill className="input-icon" /></label>
                     <div className="input-wrapper">
-                        <LockFill className="input-icon" />
+
+                        <div style={{ fontSize: 13, color: "#1976d2", marginBottom: 8 }}>
+                            Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt (@!@#$%^&*).
+                        </div>
                         <input
                             id="password"
                             name="password"
@@ -103,9 +116,7 @@ const Login = () => {
                                 onClick={() => setShowPassword(true)}
                             />
                         )}
-                        <div style={{ fontSize: 13, color: "#1976d2", marginBottom: 8 }}>
-                            Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường và ký tự đặc biệt (@!@#$%^&*).
-                        </div>
+
                     </div>
 
                     {error && (

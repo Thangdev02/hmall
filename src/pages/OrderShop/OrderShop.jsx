@@ -92,7 +92,7 @@ const OrderShop = () => {
         { value: 'Completed', label: 'Hoàn thành' }
     ];
 
-    // Function để tổng hợp sản phẩm cùng tên
+    // Function để tổng hợp sản phẩm cùng tên (giữ ảnh, mô tả, và concat notes)
     const groupProductsByName = (items) => {
         if (!items || !Array.isArray(items)) return [];
 
@@ -101,11 +101,20 @@ const OrderShop = () => {
 
             if (existingItem) {
                 existingItem.quantity += item.quantity;
-                existingItem.totalPrice += item.totalPrice || (item.price * item.quantity);
+                existingItem.totalPrice += item.totalAmounts || (item.unitPrice * item.quantity);
+                // Concat note nếu có và khác nhau
+                if (item.note && item.note.trim() && !existingItem.notes.includes(item.note.trim())) {
+                    existingItem.notes.push(item.note.trim());
+                }
             } else {
                 acc.push({
-                    ...item,
-                    totalPrice: item.totalPrice || (item.price * item.quantity)
+                    productName: item.productName,
+                    quantity: item.quantity || 1,
+                    unitPrice: item.unitPrice || 0,
+                    totalPrice: item.totalAmounts || (item.unitPrice || 0) * (item.quantity || 1),
+                    commonImage: item.commonImage || '',
+                    description: item.description || '',
+                    notes: item.note && item.note.trim() ? [item.note.trim()] : []
                 });
             }
 
@@ -147,6 +156,7 @@ const OrderShop = () => {
             const response = await getOrderDetails(orderId, 1, 9999, token);
 
             if (response.statusCode === 200) {
+                // API trả về một object với items mảng
                 setOrderDetails(response.data);
             } else {
                 setError('Không thể tải chi tiết đơn hàng');
@@ -610,7 +620,7 @@ const OrderShop = () => {
                                 <div className="mb-2"><strong>Mã:</strong> {selectedOrder.orderCode}</div>
                                 <div className="mb-2"><strong>Trạng thái:</strong> {getStatusBadge(selectedOrder.status)}</div>
                                 <div className="mb-2"><strong>Tổng tiền:</strong> {formatCurrency(selectedOrder.totalAmounts)}</div>
-                                <div className="mb-2"><strong>Thanh toán:</strong> {selectedOrder.paymentMethod}</div>
+                                <div className="mb-2"><strong>Thanh toán:</strong> {selectedOrder.paymentMethod === 'OnlineBanking' ? 'Chuyển khoản' : selectedOrder.paymentMethod}</div>
                                 <div className="mb-2"><strong>Ngày tạo:</strong> {formatDate(selectedOrder.createdDate)}</div>
                             </Col>
                             <Col md={6}>
@@ -628,19 +638,48 @@ const OrderShop = () => {
                                     <strong>Địa chỉ:</strong> {selectedOrder.deliveryAddress}
                                 </div>
                             </Col>
-                            {orderDetails && (
+                            {orderDetails && orderDetails.items && (
                                 <Col md={12} className="mt-3">
                                     <h6>Sản phẩm trong đơn hàng</h6>
                                     {groupProductsByName(orderDetails.items).map((item, index) => (
-                                        <div key={index} className="border rounded p-3 mb-2">
-                                            <Row>
-                                                <Col md={8}>
-                                                    <div><strong>{item.productName}</strong></div>
-                                                    <div className="text-muted">
-                                                        <small>Số lượng: {item.quantity}</small>
+                                        <div key={index} className="border rounded p-3 mb-2 d-flex gap-3 align-items-start">
+                                            <div style={{ width: 90, flexShrink: 0 }}>
+                                                {item.commonImage ? (
+                                                    <img src={item.commonImage} alt={item.productName} style={{ width: '100%', height: 70, objectFit: 'cover', borderRadius: 6 }} />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: 70, background: '#f0f0f0', borderRadius: 6 }} />
+                                                )}
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div className="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong>{item.productName}</strong>
+                                                        <div className="text-muted" style={{ fontSize: 13 }}>
+                                                            <span>Số lượng: {item.quantity}</span>
+                                                            {' • '}
+                                                            <span>Đơn giá: {formatCurrency(item.unitPrice)}</span>
+                                                        </div>
+                                                        {/* Hiển thị note per item (concat nếu nhiều) */}
+                                                        {item.notes && item.notes.length > 0 ? (
+                                                            <div className="mt-1 text-primary" style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>
+                                                                <strong>Ghi chú custom:</strong> {item.notes.join('; ')}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="mt-1 text-muted" style={{ fontSize: 13 }}>
+                                                                <strong>Ghi chú:</strong> Không có
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                </Col>
-                                            </Row>
+                                                    <div className="text-end">
+                                                        <strong className="text-success">{formatCurrency(item.totalPrice)}</strong>
+                                                    </div>
+                                                </div>
+                                                {item.description ? (
+                                                    <div className="mt-2 text-muted" style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}
+                                                        dangerouslySetInnerHTML={{ __html: item.description }}
+                                                    />
+                                                ) : null}
+                                            </div>
                                         </div>
                                     ))}
 
