@@ -1,56 +1,123 @@
 const BASE_URL = import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn";
 
-// Lấy danh sách sản phẩm
-export async function getProducts({ pageNumber = 1, pageSize = 20, search = "", filter = "", isActive, ShopID } = {}) {
-    const params = new URLSearchParams();
-    params.append("pageNumber", pageNumber);
-    params.append("pageSize", pageSize);
-    if (search) params.append("search", search);
-    if (filter) params.append("filter", filter);
-    if (isActive !== undefined) params.append("isActive", isActive);
-    if (ShopID) params.append("ShopID", ShopID);
-
-    const res = await fetch(`${BASE_URL}/api/v1/products/get-products?${params.toString()}`);
-    return res.json();
+/** Normalize items: ensure numeric stock, boolean isInStock, availability text, and boolean isActive */
+function normalizeItems(items = []) {
+    return items.map(item => {
+        const stock = Number(item.stock) || 0;
+        return {
+            ...item,
+            stock,
+            isInStock: stock > 0,
+            availability: stock > 0 ? "Còn hàng" : "Hết hàng",
+            isActive: Boolean(item.isActive),
+        };
+    });
 }
 
-export async function getProductsByShopID({ pageNumber = 1, pageSize = 20, search = "", filter = "", isActive, ShopID } = {}) {
+// Lấy danh sách sản phẩm (public/general)
+// default isActive = true to "get only active" unless caller overrides
+export async function getProducts({ pageNumber = 1, pageSize = 20, search = "", filter = "", isActive = true, ShopID } = {}, token) {
     const params = new URLSearchParams();
     params.append("pageNumber", pageNumber);
     params.append("pageSize", pageSize);
     if (search) params.append("search", search);
     if (filter) params.append("filter", filter);
-    if (isActive !== undefined) params.append("isActive", isActive);
+    if (isActive !== undefined) params.append("isActive", String(isActive));
     if (ShopID) params.append("ShopID", ShopID);
 
-    const res = await fetch(`${BASE_URL}/api/v1/products/get-products?${params.toString()}`);
-    return res.json();
+    const url = `${BASE_URL}/api/v1/products/get-products?${params.toString()}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: {
+                accept: '*/*',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+        });
+        const json = await res.json();
+
+        if (json?.data?.items && Array.isArray(json.data.items)) {
+            json.data.items = normalizeItems(json.data.items);
+        }
+
+        return json;
+    } catch (err) {
+        console.error("getProducts error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
+}
+
+// Legacy / alternate: lấy theo shop bằng endpoint get-products (kept for compatibility)
+export async function getProductsByShopID({ pageNumber = 1, pageSize = 20, search = "", filter = "", isActive = true, ShopID } = {}, token) {
+    const params = new URLSearchParams();
+    params.append("pageNumber", pageNumber);
+    params.append("pageSize", pageSize);
+    if (search) params.append("search", search);
+    if (filter) params.append("filter", filter);
+    if (isActive !== undefined) params.append("isActive", String(isActive));
+    if (ShopID) params.append("ShopID", ShopID);
+
+    const url = `${BASE_URL}/api/v1/products/get-products?${params.toString()}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: {
+                accept: '*/*',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+        });
+        const json = await res.json();
+        if (json?.data?.items && Array.isArray(json.data.items)) {
+            json.data.items = normalizeItems(json.data.items);
+        }
+        return json;
+    } catch (err) {
+        console.error("getProductsByShopID error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
+}
+
+// Lấy danh sách sản phẩm theo shop (đúng endpoint)
+export async function getProductsByShop({ pageNumber = 1, pageSize = 10, search = "", filter = "", isActive = true, ShopID } = {}, token) {
+    const params = new URLSearchParams();
+    params.append("pageNumber", pageNumber);
+    params.append("pageSize", pageSize);
+    if (search) params.append("search", search);
+    if (filter) params.append("filter", filter);
+    if (isActive !== undefined) params.append("isActive", String(isActive));
+    if (ShopID) params.append("ShopID", ShopID);
+
+    const url = `${BASE_URL}/api/v1/products/get-products-by-shop?${params.toString()}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: {
+                accept: '*/*',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+        });
+        const json = await res.json();
+        if (json?.data?.items && Array.isArray(json.data.items)) {
+            json.data.items = normalizeItems(json.data.items);
+        }
+        return json;
+    } catch (err) {
+        console.error("getProductsByShop error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
 }
 
 export async function getProductDetail(productId) {
     const params = new URLSearchParams();
     params.append("productId", productId);
 
-    const res = await fetch(`${BASE_URL}/api/v1/products/get-detail?${params.toString()}`);
-    return res.json();
-}
-
-// Lấy danh sách sản phẩm theo shop
-export async function getProductsByShop({ pageNumber = 1, pageSize = 10, search = "", filter = "", isActive, ShopID } = {}, token) {
-    const params = new URLSearchParams();
-    params.append("pageNumber", pageNumber);
-    params.append("pageSize", pageSize);
-    if (search) params.append("search", search);
-    if (filter) params.append("filter", filter);
-    if (isActive !== undefined) params.append("isActive", isActive);
-    if (ShopID) params.append("ShopID", ShopID);
-
-    const res = await fetch(`${BASE_URL}/api/v1/products/get-products-by-shop?${params.toString()}`, {
-        headers: {
-            ...(token && { Authorization: `Bearer ${token}` }),
-        },
-    });
-    return res.json();
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/products/get-detail?${params.toString()}`);
+        return await res.json();
+    } catch (err) {
+        console.error("getProductDetail error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
 }
 
 // Tạo sản phẩm mới
@@ -111,12 +178,18 @@ export async function getFavoriteProducts({ pageNumber = 1, pageSize = 10 } = {}
     params.append("pageNumber", pageNumber);
     params.append("pageSize", pageSize);
 
-    const res = await fetch(`${BASE_URL}/api/v1/products/get-favorite-product?${params.toString()}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-    return res.json();
+    const url = `${BASE_URL}/api/v1/products/get-favorite-product?${params.toString()}`;
+    try {
+        const res = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return res.json();
+    } catch (err) {
+        console.error("getFavoriteProducts error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
 }
 
 // ============= PRODUCT FEEDBACK FUNCTIONS =============
@@ -155,16 +228,26 @@ export async function getProductFeedbacks({ productID, pageNumber = 1, pageSize 
     params.append("pageSize", pageSize);
     params.append("ratingFilter", ratingFilter);
 
-    const res = await fetch(`${BASE_URL}/api/v1/product-feedbacks/get-feedbacks?${params.toString()}`);
-    return res.json();
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/product-feedbacks/get-feedbacks?${params.toString()}`);
+        return res.json();
+    } catch (err) {
+        console.error("getProductFeedbacks error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
 }
-export async function deleteFeedback(feedbackID, token) {
-    const res = await fetch(`${BASE_URL}/api/v1/product-feedbacks/delete/${feedbackID}`, {
-        method: "DELETE",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
 
-    return await res.json();
+export async function deleteFeedback(feedbackID, token) {
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/product-feedbacks/delete/${feedbackID}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return await res.json();
+    } catch (err) {
+        console.error("deleteFeedback error:", err);
+        return { statusCode: 500, message: "Network error", data: null };
+    }
 }

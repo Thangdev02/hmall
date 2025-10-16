@@ -64,28 +64,47 @@ const ShopProducts = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    // ...existing code...
     useEffect(() => {
+        const controller = new AbortController();
+
         async function fetchProducts() {
             setLoading(true);
             setError("");
             try {
-                const res = await getProductsByShop({ pageNumber, pageSize, shopId }, token);
+                const res = await getProductsByShop(
+                    { pageNumber, pageSize, ShopID: "", isActive: true },
+                    token,
+                    { signal: controller.signal } // optional if you extend API to accept signal
+                );
                 console.log("API response:", res);
-                if (res.statusCode === 200) {
-                    const activeProducts = (res.data.items || []);
+                if (res && res.statusCode === 200) {
+                    const items = Array.isArray(res.data?.items) ? res.data.items : [];
+                    const activeProducts = items.filter(p => p.isActive === true);
                     setProducts(activeProducts);
-                    setTotalPages(res.data.totalPages || 1);
+                    setTotalPages(res.data?.totalPages || 1);
                 } else {
-                    setError(res.message || "Lỗi khi tải sản phẩm");
+                    setError(res?.message || "Lỗi khi tải sản phẩm");
                 }
-                // eslint-disable-next-line no-unused-vars
             } catch (err) {
-                setError("Không thể tải sản phẩm");
+                if (err.name === 'AbortError') {
+                    console.log('fetchProducts aborted');
+                } else {
+                    console.error("fetchProducts error:", err);
+                    setError("Không thể tải sản phẩm");
+                }
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
+
+
         fetchProducts();
+        return () => {
+            controller.abort();
+        };
     }, [pageNumber, pageSize, shopId, token]);
+    // ...existing code...
 
     const handleProductCreated = async () => {
         setPageNumber(1);
