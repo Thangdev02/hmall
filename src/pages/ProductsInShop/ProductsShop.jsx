@@ -129,9 +129,25 @@ const ProductsShop = () => {
                 const res = await getProducts(params);
 
                 if (res.statusCode === 200) {
-                    setProducts(res.data.items || []);
+                    // normalize items locally as a safety-net (API helper should also normalize)
+                    const itemsRaw = res.data.items || [];
+                    const items = itemsRaw.map(it => {
+                        const stock = Number(it.stock) || 0;
+                        const statusRaw = (it.status || "").toString().trim();
+                        const statusLower = statusRaw.toLowerCase();
+                        const isInStock = statusRaw ? (statusLower === "available") : (stock > 0);
+                        return {
+                            ...it,
+                            stock,
+                            status: statusRaw,
+                            isInStock,
+                            isActive: typeof it.isActive === "boolean" ? it.isActive : isInStock,
+                        };
+                    });
+
+                    setProducts(items);
                     setTotalPages(res.data.totalPages || 1);
-                    setTotalItems(res.data.totalRecord || 0);
+                    setTotalItems(res.data.totalRecord || items.length);
                 } else {
                     setError(res.message || 'Không thể tải sản phẩm');
                 }
@@ -352,13 +368,21 @@ const ProductsShop = () => {
                                                         height: '250px'
                                                     }}
                                                 />
-                                                {product.status === 'Available' && (
+                                                {(product.status === 'Available' || product.isInStock) ? (
                                                     <Badge
                                                         bg="success"
                                                         className="position-absolute"
                                                         style={{ top: '10px', left: '10px' }}
                                                     >
                                                         Còn hàng
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge
+                                                        bg="danger"
+                                                        className="position-absolute"
+                                                        style={{ top: '10px', left: '10px' }}
+                                                    >
+                                                        Hết hàng
                                                     </Badge>
                                                 )}
                                                 {/* Like button giống Products */}

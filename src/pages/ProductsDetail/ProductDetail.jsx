@@ -71,7 +71,7 @@ const ProductDetail = () => {
         delete allFavorites[token][productId]
       }
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(allFavorites))
-      // eslint-disable-next-line no-unused-vars, no-empty
+      // eslint-disable-next-line no-empty, no-unused-vars
     } catch (error) { }
   }
 
@@ -92,21 +92,39 @@ const ProductDetail = () => {
         if (res?.statusCode === 404) {
           throw new Error("Product not found")
         }
-        const p = res?.data
-        setProduct(p)
+        const p = res?.data || {}
+
+        // normalize fields we need
+        const stock = Number(p.stock) || 0
+        const statusRaw = (p.status || "").toString().trim()
+        const statusLower = statusRaw.toLowerCase()
+        // If API explicitly provides status, rely on it. Available => in stock. Otherwise fallback to stock > 0.
+        const isInStock = statusRaw ? (statusLower === "available") : (stock > 0)
+        const isActive = Boolean(p.isActive) || isInStock
+
+        const normalized = {
+          ...p,
+          stock,
+          status: statusRaw,
+          isInStock,
+          isActive,
+        }
+
+        setProduct(normalized)
 
         // Kiểm tra trạng thái từ localStorage trước
         const localFavoriteStatus = getFavoriteStatus(id)
-        const finalStatus = localFavoriteStatus !== false ? localFavoriteStatus : (p?.isFavorite || false)
+        const finalStatus = localFavoriteStatus !== false ? localFavoriteStatus : (normalized?.isFavorite || false)
         setIsLiked(finalStatus)
         setFavoriteStatus(id, finalStatus)
 
         const allImages = [
-          p?.commonImage && (p.commonImage.startsWith("http") ? p.commonImage : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${p.commonImage}`),
-          ...(p?.moreImages?.map(img => img.url.startsWith("http") ? img.url : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${img.url}`) || [])
+          normalized?.commonImage && (normalized.commonImage.startsWith("http") ? normalized.commonImage : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${normalized.commonImage}`),
+          ...(normalized?.moreImages?.map(img => img.url && (img.url.startsWith("http") ? img.url : `${import.meta.env.VITE_API_URL?.replace("/swagger/index.html", "") || "https://hmstoresapi.eposh.io.vn"}/${img.url}`)) || [])
         ].filter(Boolean)
         setSelectedImage(allImages[0] || "")
-        setProduct(prev => ({ ...prev, allImages }))
+        // eslint-disable-next-line no-unused-vars
+        setProduct(prev => ({ ...normalized, allImages }))
       })
       .catch(error => {
         if (error.response?.status === 404 || error.message === "Product not found") {
@@ -120,16 +138,24 @@ const ProductDetail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  // compute availability from product.status / product.isInStock
+  const isAvailable = (() => {
+    if (!product) return false
+    const statusRaw = (product.status || "").toString().trim()
+    if (statusRaw) return statusRaw.toLowerCase() === "available"
+    return Boolean(product.isInStock) || (Number(product.stock) > 0)
+  })()
+
   // Handle previous/next image navigation
   const handlePreviousImage = () => {
-    if (!product.allImages || product.allImages.length <= 1) return
+    if (!product?.allImages || product.allImages.length <= 1) return
     const currentIndex = product.allImages.indexOf(selectedImage)
     const prevIndex = currentIndex === 0 ? product.allImages.length - 1 : currentIndex - 1
     setSelectedImage(product.allImages[prevIndex])
   }
 
   const handleNextImage = () => {
-    if (!product.allImages || product.allImages.length <= 1) return
+    if (!product?.allImages || product.allImages.length <= 1) return
     const currentIndex = product.allImages.indexOf(selectedImage)
     const nextIndex = currentIndex === product.allImages.length - 1 ? 0 : currentIndex + 1
     setSelectedImage(product.allImages[nextIndex])
@@ -195,7 +221,7 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = async () => {
-    if (!product.isActive) {
+    if (!isAvailable) {
       setToastMessage("Sản phẩm đã hết hàng!")
       setShowToast(true)
       return
@@ -235,7 +261,7 @@ const ProductDetail = () => {
 
   // Xử lý mở modal mua ngay
   const handleBuyNow = () => {
-    if (!product.isActive) {
+    if (!isAvailable) {
       setToastMessage("Sản phẩm đã hết hàng!")
       setShowToast(true)
       return
@@ -478,11 +504,11 @@ const ProductDetail = () => {
                 <Star fill="#ffc107" color="#ffc107" size={20} />
                 <span className="ms-2 fw-bold">{product.rating}</span>
                 <Badge
-                  bg={product.isActive ? "success" : "danger"}
+                  bg={isAvailable ? "success" : "danger"}
                   className="ms-3"
                   style={{ fontSize: "0.9rem" }}
                 >
-                  {product.isActive ? "Còn hàng" : "Hết hàng"}
+                  {isAvailable ? "Còn hàng" : "Hết hàng"}
                 </Badge>
               </div>
               <h3 className="fw-bold mb-4 text-primary">{product.price?.toLocaleString("vi-VN")}đ</h3>
@@ -498,7 +524,7 @@ const ProductDetail = () => {
                   variant="outline-secondary"
                   size="sm"
                   onClick={() => setCartQuantity(prev => Math.max(1, prev - 1))}
-                  disabled={cartQuantity <= 1 || !product.isActive}
+                  disabled={cartQuantity <= 1 || !isAvailable}
                   className="quantity-btn"
                 >
                   −
@@ -511,13 +537,13 @@ const ProductDetail = () => {
                   onChange={e => setCartQuantity(Math.max(1, Math.min(Number(e.target.value), product.stock || 100)))}
                   className="quantity-input"
                   aria-label="Số lượng sản phẩm"
-                  disabled={!product.isActive}
+                  disabled={!isAvailable}
                 />
                 <Button
                   variant="outline-secondary"
                   size="sm"
                   onClick={() => setCartQuantity(prev => Math.min(prev + 1, product.stock || 100))}
-                  disabled={cartQuantity >= (product.stock || 100) || !product.isActive}
+                  disabled={cartQuantity >= (product.stock || 100) || !isAvailable}
                   className="quantity-btn"
                 >
                   +
@@ -527,12 +553,12 @@ const ProductDetail = () => {
                 <Button
                   size="lg"
                   className="btn-primary-custom"
-                  disabled={!product.isActive}
+                  disabled={!isAvailable}
                   onClick={handleBuyNow}
                 >
                   Mua Ngay
                 </Button>
-                <Button size="lg" variant="outline-secondary" onClick={handleAddToCart} disabled={!product.isActive}>
+                <Button size="lg" variant="outline-secondary" onClick={handleAddToCart} disabled={!isAvailable}>
                   Thêm Vào Giỏ
                 </Button>
                 <Button
