@@ -3,11 +3,12 @@ import { Container, Row, Col, Card, Button, Form, Badge, Pagination, Toast, Toas
 import { motion } from "framer-motion";
 import { Star, Heart, HeartFill, Search, Filter, Shop } from "react-bootstrap-icons";
 import "./Products.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getProducts, favoriteProduct } from "../../api/product";
 
 const Products = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const token = localStorage.getItem("token");
 
     const [selectedCategory, setSelectedCategory] = useState("all");
@@ -97,6 +98,11 @@ const Products = () => {
             setFavoriteLoadings(prev => ({ ...prev, [productId]: false }));
         }
     }
+
+    // auto scroll to top when coming from other pages or when pagination/search changes
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [location.pathname, pageNumber, searchQuery]);
 
     useEffect(() => {
         const fetchProducts = async () => {
