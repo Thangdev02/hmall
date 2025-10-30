@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Modal, Form, Button, Toast, ToastContainer } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Cart.css";
 import { getCartItems, deleteCartItem, editCartItemQuantity } from "../../api/cart";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -10,6 +10,7 @@ import { createOrder, createQRPayment } from "../../api/oder";
 
 const Cart = () => {
     const navigate = useNavigate();
+    const location = useLocation(); // <-- ensure we know current route
     const [cartItems, setCartItems] = useState([]);
     const [totalAmounts, setTotalAmounts] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -25,6 +26,11 @@ const Cart = () => {
     // ✅ Thêm state cho validation errors
     const [formErrors, setFormErrors] = useState({});
     const token = localStorage.getItem("token");
+
+    // Luôn cuộn lên đầu trang khi component mount hoặc khi route thay đổi
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    }, [location.pathname]);
 
     // Lấy giỏ hàng từ API
     useEffect(() => {
@@ -157,6 +163,7 @@ const Cart = () => {
                             setShowCheckoutModal(false);
 
                             setTimeout(() => {
+                                window.scrollTo({ top: 0, behavior: 'auto' });
                                 navigate('/settings?tab=orders');
                             }, 1500);
                         } else {
@@ -175,6 +182,7 @@ const Cart = () => {
                     setShowCheckoutModal(false);
 
                     setTimeout(() => {
+                        window.scrollTo({ top: 0, behavior: 'auto' });
                         navigate('/settings?tab=orders');
                     }, 1500);
                 }
