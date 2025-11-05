@@ -33,7 +33,7 @@ const Home = () => {
             try {
                 setLoadingProducts(true)
                 const response = await getProducts({
-                    pageSize: 20,
+                    pageSize: 1000,
                     pageNumber: 1,
                     isActive: true
                 })
