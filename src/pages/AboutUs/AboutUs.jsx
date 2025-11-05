@@ -36,6 +36,12 @@ const AboutUs = () => {
             image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww",
             description: "Nghệ nhân dệt may tài năng, chuyên tạo ra những sản phẩm vải độc đáo và tinh xảo.",
         },
+        {
+            name: "Nguyễn Trọng Tín",
+            role: "Member",
+            image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww",
+            description: "Chuyên gia về đồ gỗ thủ công với kỹ thuật truyền thống được truyền từ đời này sang đời khác.",
+        },
     ]
 
     const values = [
@@ -101,19 +107,12 @@ const AboutUs = () => {
                                 Câu Chuyện Của Chúng Tôi
                             </h2>
                             <p className="text-muted mb-4" style={{ lineHeight: "1.8" }}>
-                                HMall được thành lập vào năm 2025 với mong muốn bảo tồn và phát triển nghề thủ công truyền thống
-                                Việt Nam. Chúng tôi bắt đầu từ một xưởng nhỏ với chỉ 3 nghệ nhân, và ngày nay đã phát triển thành một
-                                cộng đồng gồm hơn 50 nghệ nhân tài năng.
+                                Được thành lập vào năm 2025, HMall ra đời với mong muốn gìn giữ và phát triển các làng nghề thủ công truyền thống Việt Nam. Chúng tôi tin rằng, mỗi sản phẩm thủ công không chỉ là một món đồ, mà còn là kết tinh của tâm huyết, sự sáng tạo và bản sắc văn hóa dân tộc.
                             </p>
                             <p className="text-muted mb-4" style={{ lineHeight: "1.8" }}>
-                                Mỗi sản phẩm của chúng tôi đều mang trong mình câu chuyện riêng, được tạo ra bằng đôi bàn tay khéo léo
-                                và tình yêu của các nghệ nhân. Chúng tôi tin rằng những sản phẩm handmade không chỉ là vật dụng, mà còn
-                                là cầu nối giữa người tạo ra và người sử dụng.
+                                Với sứ mệnh mang đến những sản phẩm chất lượng, độc đáo và đầy ý nghĩa, HMall không chỉ kết nối người làm và người dùng, mà còn góp phần lan tỏa những giá trị bền vững của nghề thủ công Việt Nam đến gần hơn với cuộc sống hiện đại.
                             </p>
-                            <p className="text-muted" style={{ lineHeight: "1.8" }}>
-                                Sứ mệnh của chúng tôi là mang đến cho khách hàng những sản phẩm chất lượng cao, độc đáo và có ý nghĩa,
-                                đồng thời góp phần bảo tồn và phát triển các nghề thủ công truyền thống.
-                            </p>
+
                         </motion.div>
                     </Col>
                     <Col lg={6}>
@@ -230,63 +229,7 @@ const AboutUs = () => {
 
 
                 {/* Statistics Section */}
-                <section
-                    className="text-center text-white mb-5"
-                    style={{
-                        background: "linear-gradient(135deg, #84B4C8 0%, #B2D9EA 100%)",
-                        margin: "80px -15px 0",
-                        padding: "80px 15px",
-                    }}
-                >
-                    <Container>
-                        <Row>
-                            <Col md={3} className="mb-4">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.1 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h2 className="display-4 fw-bold">50+</h2>
-                                    <p className="lead">Nghệ nhân</p>
-                                </motion.div>
-                            </Col>
-                            <Col md={3} className="mb-4">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.2 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h2 className="display-4 fw-bold">1000+</h2>
-                                    <p className="lead">Sản phẩm</p>
-                                </motion.div>
-                            </Col>
-                            <Col md={3} className="mb-4">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.3 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h2 className="display-4 fw-bold">5000+</h2>
-                                    <p className="lead">Khách hàng hài lòng</p>
-                                </motion.div>
-                            </Col>
-                            <Col md={3} className="mb-4">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.6, delay: 0.4 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h2 className="display-4 fw-bold">6</h2>
-                                    <p className="lead">Năm kinh nghiệm</p>
-                                </motion.div>
-                            </Col>
-                        </Row>
-                    </Container>
-                </section>
+
             </Container>
         </div>
     )
