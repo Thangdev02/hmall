@@ -28,20 +28,19 @@ const AboutUs = () => {
             name: "Trần Minh Bảo",
             role: "Member",
             image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww",
-            description: "Nghệ nhân dệt may tài năng, chuyên tạo ra những sản phẩm vải độc đáo và tinh xảo.",
+
         },
         {
             name: "Nguyễn Lê Hữu Huy",
             role: "Member",
             image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww",
-            description: "Nghệ nhân dệt may tài năng, chuyên tạo ra những sản phẩm vải độc đáo và tinh xảo.",
+
         },
         {
             name: "Nguyễn Trọng Tín",
             role: "Member",
             image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww",
-            description: "Chuyên gia về đồ gỗ thủ công với kỹ thuật truyền thống được truyền từ đời này sang đời khác.",
-        },
+        }
     ]
 
     const values = [
@@ -222,7 +221,7 @@ const AboutUs = () => {
                             </div>
                             <h5 className="fw-bold mt-3">{member.name}</h5>
                             <p className="text-primary fw-semibold">{member.role}</p>
-                            <p className="text-muted small">{member.description}</p>
+
                         </motion.div>
                     ))}
                 </div>
