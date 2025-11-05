@@ -163,14 +163,15 @@ const AboutUs = () => {
                                         <Card className="h-100" style={{ border: "none", backgroundColor: "white" }}>
                                             <Card.Body className="p-4">
                                                 <div
-                                                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                                    className="d-flex align-items-center justify-content-center rounded-circle mb-3"
                                                     style={{
                                                         width: "80px",
                                                         height: "80px",
                                                         backgroundColor: index % 2 === 0 ? "#B2D9EA" : "#84B4C8",
+                                                        margin: "0 auto 12px", // center the circle horizontally
                                                     }}
                                                 >
-                                                    <value.icon size={32} color="white" />
+                                                    <value.icon size={32} color="white" style={{ display: "block", lineHeight: 0 }} />
                                                 </div>
                                                 <h5 className="fw-bold mb-3" style={{ color: "#2c3e50" }}>
                                                     {value.title}

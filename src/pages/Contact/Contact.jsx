@@ -147,7 +147,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h6 className="fw-bold mb-1">Địa chỉ</h6>
-                      <p className="text-muted mb-0">246 Nguyễn Thị Minh Khai, Quy Nhơn Nam, Gia Lai</p>
+                      <p className="text-muted mb-0"> Đại học FPT Quy Nhơn</p>
                     </div>
                   </div>
                 </Card.Body>

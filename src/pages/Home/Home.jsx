@@ -253,7 +253,7 @@ const Home = () => {
                                 <h2 className="display-5 fw-bold mb-3" style={{ color: "#2c3e50" }}>
                                     Sản Phẩm Nổi Bật
                                 </h2>
-                                <p className="lead text-muted">Top 6 sản phẩm có đánh giá cao nhất</p>
+                                <p className="lead text-muted">Top các sản phẩm có đánh giá cao nhất</p>
                             </motion.div>
                         </Col>
                     </Row>

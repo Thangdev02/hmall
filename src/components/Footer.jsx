@@ -62,7 +62,7 @@ const Footer = () => {
             <h6 style={{ color: "#2c3e50", marginBottom: "20px" }}>Liên hệ</h6>
             <div className="d-flex align-items-center mb-2">
               <GeoAlt size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
-              <span style={{ color: "#6c757d", fontSize: "14px" }}>246 Nguyễn Thị Minh Khai, Quy Nhơn Nam, Gia Lai</span>
+              <span style={{ color: "#6c757d", fontSize: "14px" }}> Đại học FPT Quy Nhơn</span>
             </div>
             <div className="d-flex align-items-center mb-2">
               <Telephone size={16} style={{ color: "#84B4C8", marginRight: "10px" }} />
