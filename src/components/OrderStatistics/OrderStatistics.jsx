@@ -82,21 +82,26 @@ const OrderStatistics = () => {
 
     // Tính toán thống kê
     const calculateStatistics = (orders) => {
+        // Các danh sách trạng thái riêng
         const paidOrders = orders.filter(order => order.status === 'PAID' || order.status === 'Paid');
         const completedOrders = orders.filter(order => order.status === 'Completed');
 
-        // Tổng doanh thu từ các đơn đã thanh toán
-        const totalRevenue = paidOrders.reduce((sum, order) => sum + order.totalAmounts, 0);
+        // Tập các đơn tính doanh thu: bao gồm cả Paid/PAID và Completed
+        const revenueStatuses = new Set(['PAID', 'Paid', 'Completed']);
+        const revenueOrders = orders.filter(order => revenueStatuses.has(order.status));
+
+        // Tổng doanh thu từ các đơn đã thanh toán hoặc đã hoàn thành
+        const totalRevenue = revenueOrders.reduce((sum, order) => sum + (Number(order.totalAmounts) || 0), 0);
 
         // Thống kê theo trạng thái
         const statusBreakdown = orders.reduce((acc, order) => {
-            const status = order.status;
+            const status = order.status || 'Unknown';
             acc[status] = (acc[status] || 0) + 1;
             return acc;
         }, {});
 
-        // Doanh thu theo tháng (6 tháng gần nhất)
-        const monthlyRevenue = calculateMonthlyRevenue(paidOrders);
+        // Doanh thu theo tháng (6 tháng gần nhất) tính từ revenueOrders
+        const monthlyRevenue = calculateMonthlyRevenue(revenueOrders);
 
         // Tính tăng trưởng (so với tháng trước)
         const revenueGrowth = calculateGrowthRate(monthlyRevenue);

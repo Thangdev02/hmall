@@ -8,6 +8,8 @@ import {
     deleteBlog,
     createBlog,
 } from "../api/blog";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const BASE_API_URL = "https://hmstoresapi.eposh.io.vn/";
 
@@ -26,6 +28,21 @@ const ShopBlogManager = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailBlog, setDetailBlog] = useState(null);
+
+    // Quill toolbar/config
+    const quillModules = {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link", "image"],
+            ["clean"]
+        ]
+    };
+    const quillFormats = [
+        "header", "bold", "italic", "underline", "strike",
+        "list", "bullet", "link", "image"
+    ];
 
     // Lấy danh sách blog của shop (dùng API cũ)
     const fetchBlogs = async () => {
@@ -102,6 +119,12 @@ const ShopBlogManager = () => {
     // Lưu blog (tạo mới hoặc cập nhật)
     const handleSave = async () => {
         try {
+            if (!blogForm.title?.trim() || !blogForm.content?.trim()) {
+                setMessage("Vui lòng điền đầy đủ tiêu đề và nội dung!");
+                setMessageType("danger");
+                return;
+            }
+
             if (modalMode === "create") {
                 await createBlog(blogForm, token);
                 setMessage("Tạo blog thành công!");
@@ -200,7 +223,7 @@ const ShopBlogManager = () => {
             )}
 
             {/* Modal tạo/sửa blog */}
-            <Modal show={showModal} onHide={() => setShowModal(false)}>
+            <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title>
                         {modalMode === "create" ? "Thêm Blog mới" : "Chỉnh sửa Blog"}
@@ -243,14 +266,19 @@ const ShopBlogManager = () => {
                                 </div>
                             )}
                         </Form.Group>
+
+                        {/* ReactQuill editor for blog content */}
                         <Form.Group className="mb-3">
                             <Form.Label>Nội dung<span className="text-danger">*</span></Form.Label>
-                            <Form.Control
-                                as="textarea"
-                                rows={5}
+                            <ReactQuill
+                                theme="snow"
                                 value={blogForm.content}
-                                onChange={(e) => setBlogForm((prev) => ({ ...prev, content: e.target.value }))}
+                                onChange={(value) => setBlogForm((prev) => ({ ...prev, content: value }))}
+                                modules={quillModules}
+                                formats={quillFormats}
+                                style={{ minHeight: 200, marginBottom: 10 }}
                             />
+                            <Form.Text className="text-muted">Nội dung được lưu ở dạng HTML.</Form.Text>
                         </Form.Group>
                     </Form>
                 </Modal.Body>

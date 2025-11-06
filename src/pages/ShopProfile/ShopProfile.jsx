@@ -200,7 +200,7 @@ const ShopProfile = () => {
                 >
                     <Tab eventKey="profile" title="Thông tin shop">
                         <Row>
-                            <Col lg={8}>
+                            <Col lg={12}>
                                 {/* Shop Information Card */}
                                 <Card className="shop-info-card mb-4">
                                     <Card.Header className="d-flex justify-content-between align-items-center">
@@ -290,28 +290,7 @@ const ShopProfile = () => {
                                 </Card>
                             </Col>
 
-                            <Col lg={4}>
-                                {/* Quick Stats */}
-                                <Card className="stats-card mb-4">
-                                    <Card.Header>
-                                        <h5 className="mb-0">Thống kê nhanh</h5>
-                                    </Card.Header>
-                                    <Card.Body>
-                                        <div className="stat-item">
-                                            <div className="stat-number">{shopData?.ratingAverage || 0}</div>
-                                            <div className="stat-label">Điểm đánh giá trung bình</div>
-                                        </div>
-                                        <div className="stat-item">
-                                            <div className="stat-number">0</div>
-                                            <div className="stat-label">Tổng số sản phẩm</div>
-                                        </div>
-                                        <div className="stat-item">
-                                            <div className="stat-number">0</div>
-                                            <div className="stat-label">Đơn hàng hoàn thành</div>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
+
                         </Row>
                     </Tab>
 
